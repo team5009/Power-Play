@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.src.models
 
+import android.content.Context
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
 import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
@@ -7,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 
 open class BotHardware(Instance:LinearOpMode, hardware: HardwareMap, gamepad: Gamepad? = null, t: Telemetry) {
-    open val vuforiakey: String = ""
+    open val vuforiaKey: String = hardware.appContext.assets.open("vuforiaKey.txt").bufferedReader().use { it.readText() }
     open val fl: DcMotor = hardware.get("FL") as DcMotor
     open val fr: DcMotor = hardware.get("FR") as DcMotor
     open val br: DcMotor = hardware.get("BR") as DcMotor

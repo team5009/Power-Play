@@ -57,7 +57,7 @@ class TensorFlowCamTest: LinearOpMode() {
     private fun initVuforia(): VuforiaLocalizer {
         val paramaters: VuforiaLocalizer.Parameters = VuforiaLocalizer.Parameters();
 
-        paramaters.vuforiaLicenseKey = bot.vuforiakey
+        paramaters.vuforiaLicenseKey = bot.vuforiaKey
         paramaters.cameraName = bot.camera
 
         return ClassFactory.getInstance().createVuforia(paramaters)
