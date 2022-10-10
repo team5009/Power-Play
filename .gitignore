@@ -88,3 +88,4 @@ lint/tmp/
 # lint/reports/
 .DS_Store*
 .github*
+config.json*

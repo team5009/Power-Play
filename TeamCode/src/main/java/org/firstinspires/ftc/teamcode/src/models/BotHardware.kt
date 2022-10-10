@@ -1,20 +1,18 @@
 package org.firstinspires.ftc.teamcode.src.models
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.Gamepad
+import com.qualcomm.robotcore.hardware.*
 import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
-import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 
 open class BotHardware(Instance:LinearOpMode, hardware: HardwareMap, gamepad: Gamepad? = null, t: Telemetry) {
-    protected open val vuforiakey: String = ""
+    open val vuforiakey: String = ""
     open val fl: DcMotor = hardware.get("FL") as DcMotor
     open val fr: DcMotor = hardware.get("FR") as DcMotor
     open val br: DcMotor = hardware.get("BR") as DcMotor
     open val bl: DcMotor = hardware.get("BL") as DcMotor
-    private var camera: WebcamName = hardware.get("Webcam") as WebcamName
+    open var camera: CameraName = hardware.get("Webcam") as CameraName
     open var forward:Double? = -gamepad?.left_stick_y?.toDouble()!!
     open var pivot: Double? = gamepad?.left_stick_x?.toDouble()!!
     private val telemetry: Telemetry = t
