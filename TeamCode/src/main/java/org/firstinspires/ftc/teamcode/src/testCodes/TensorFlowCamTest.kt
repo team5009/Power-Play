@@ -2,23 +2,20 @@ package org.firstinspires.ftc.teamcode.src.testCodes
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.vuforia.Vuforia
 import org.firstinspires.ftc.robotcore.external.ClassFactory
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector
-import org.firstinspires.ftc.robotcore.internal.tfod.TfodParameters
-import org.firstinspires.ftc.teamcode.src.models.BotHardware
+import org.firstinspires.ftc.teamcode.src.models.ABot.AutoInstance
 
 @Autonomous(name = "CamDetection", group = "AutoTest")
 class TensorFlowCamTest: LinearOpMode() {
-    var bot: BotHardware? = null
+    private var bot: AutoInstance? = null
     private val TFOD_MODEL_ASSET: String = "cones_models/model_unquant.tflite"
     private val LABELS: Array<String> = arrayOf<String>("BlueCone", "RedCone")
     override fun runOpMode() {
         try {
-            bot = BotHardware(this, hardwareMap, gamepad1, telemetry)
+            bot = AutoInstance(this, hardwareMap, telemetry)
             val tfod = initTF()
             tfod.activate()
             tfod.setZoom(1.0, 16.0/9.0)
@@ -56,12 +53,12 @@ class TensorFlowCamTest: LinearOpMode() {
 
     // Initialize Vuforia localization engine
     private fun initVuforia(): VuforiaLocalizer {
-        val paramaters: VuforiaLocalizer.Parameters = VuforiaLocalizer.Parameters();
+        val parameters: VuforiaLocalizer.Parameters = VuforiaLocalizer.Parameters();
 
-        paramaters.vuforiaLicenseKey = bot?.vuforiaKey
-        paramaters.cameraName = bot?.camera
+        parameters.vuforiaLicenseKey = bot?.vuforiaKey
+        parameters.cameraName = bot?.camera
 
-        return ClassFactory.getInstance().createVuforia(paramaters)
+        return ClassFactory.getInstance().createVuforia(parameters)
     }
     // Initialize the TensorFlow Object Detection engine.
     private fun initTF(): TFObjectDetector {
