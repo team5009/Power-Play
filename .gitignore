@@ -47,6 +47,7 @@ captures/
 .idea/dictionaries
 .idea/libraries
 # Android Studio 3 in .gitignore file.
+.idea
 .idea/caches
 .idea/modules.xml
 # Comment next line if keeping position of elements in Navigation Editor is relevant for you
@@ -86,3 +87,4 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 .DS_Store*
+.github*
