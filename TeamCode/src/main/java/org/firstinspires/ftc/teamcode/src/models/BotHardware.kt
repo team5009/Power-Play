@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
 open class BotHardware(Instance:LinearOpMode, hardware: HardwareMap, gamepad: Gamepad? = null, t: Telemetry) {
-    protected open val vuforiakey: String = "Aaw91aX/////AAABmdsPMOJ+SEw2hbB0KuA91QNdCicETTnXn5+HBhEteAhuFgn/KjtDhaDByyvmLiJRDJrUO1njQVgKy9wvDfxoXptJURnl+R6mpv17sWJCvMYUeFmlgrk/31pTM4aeIdSNn9z+xupD/tgXRS2cQEHAIu+Hha1/EzIF3lbYiRwNhDbG3XtVzmjuBLus3Gx+I75KgUzkPwn0XIFbQ96BZvIF+6cv3bKEWNyUZ7thLBB3OrPP0Fm02W3fmXhxAB4cpvuqUbVOFkOEkrhAyDxtuP28PKchLXjcJD6JMFXYa8K7pGXcuMiNge5M10knHwEWgvSJLuhcC2onFtgnlGwmDswuqki2ynlQPbLQAGwpKNsPSlET"
+    protected open val vuforiakey: String = ""
     open val fl: DcMotor = hardware.get("FL") as DcMotor
     open val fr: DcMotor = hardware.get("FR") as DcMotor
     open val br: DcMotor = hardware.get("BR") as DcMotor
