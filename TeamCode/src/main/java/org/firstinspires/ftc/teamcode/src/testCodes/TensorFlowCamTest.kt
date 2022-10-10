@@ -13,11 +13,12 @@ import org.firstinspires.ftc.teamcode.src.models.BotHardware
 
 @Autonomous(name = "CamDetection", group = "AutoTest")
 class TensorFlowCamTest: LinearOpMode() {
-    val bot = BotHardware(this, hardwareMap, gamepad1, telemetry)
+    var bot: BotHardware? = null
     private val TFOD_MODEL_ASSET: String = "cones_models/model_unquant.tflite"
-    private val LABELS: Array<String> = arrayOf<String>("0 BlueCone", "1 RedCone")
+    private val LABELS: Array<String> = arrayOf<String>("BlueCone", "RedCone")
     override fun runOpMode() {
         try {
+            bot = BotHardware(this, hardwareMap, gamepad1, telemetry)
             val tfod = initTF()
             tfod.activate()
             tfod.setZoom(1.0, 16.0/9.0)
@@ -57,8 +58,8 @@ class TensorFlowCamTest: LinearOpMode() {
     private fun initVuforia(): VuforiaLocalizer {
         val paramaters: VuforiaLocalizer.Parameters = VuforiaLocalizer.Parameters();
 
-        paramaters.vuforiaLicenseKey = bot.vuforiaKey
-        paramaters.cameraName = bot.camera
+        paramaters.vuforiaLicenseKey = bot?.vuforiaKey
+        paramaters.cameraName = bot?.camera
 
         return ClassFactory.getInstance().createVuforia(paramaters)
     }
