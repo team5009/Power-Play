@@ -13,7 +13,7 @@ class AutoTest: LinearOpMode() {
         telemetry.update()
         waitForStart()
         while(opModeIsActive()) {
-            bot?.move("Forward", 10.toDouble(), 1.toDouble(), true)
+            bot?.move("Forward", 10, 1, true)
             sleep(500)
         }
 
