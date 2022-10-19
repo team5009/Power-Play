@@ -10,21 +10,18 @@ import org.firstinspires.ftc.teamcode.src.models.ABot.AutoInstance
 
 @TeleOp(name = "NormalTeleOp", group = "TeleOp Mode")
 class NormalOpMode : LinearOpMode() {
-    private var bot: AutoInstance? = null
+//    private var bot: AutoInstance? = null
 
 
     override fun runOpMode() {
-        bot = AutoInstance(this, hardwareMap, telemetry)
+//        bot = AutoInstance(this, hardwareMap, telemetry)
 //        right?.setPower(gamepad1.right_stick_y.toDouble());
 //        left?.setPower((-gamepad1.left_stick_y).toDouble());
         waitForStart()
-            while(OpModeIsActive())
-        telemetry.addData("GamePad 1X %f".format(gamepad1.left_stick_x.toDouble()))
-        telemetry.addData("GamePad 1Y %f".format(gamepad1.left_stick_y.toDouble()))
+        while(opModeIsActive()){
+        telemetry.addData("GamePad 1X %f", gamepad1.left_stick_x)
+        telemetry.addData("GamePad 1Y %f", gamepad1.left_stick_y)
         telemetry.update()
-    }
-
-    private fun OpModeIsActive(): Boolean {
-
+        }
     }
 }
