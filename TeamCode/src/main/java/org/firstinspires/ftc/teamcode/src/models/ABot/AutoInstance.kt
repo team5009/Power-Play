@@ -56,8 +56,6 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         }
     }
 
-
-
     fun move(Direction: String = "Forwards", Inches: Int, Power: Int, brake: Boolean) {
         try {
             val distance = inchToTick(Inches.toDouble())
