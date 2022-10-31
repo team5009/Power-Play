@@ -24,8 +24,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
 
     init {
         // Set Each Wheel Direction
-        fl.direction = DcMotorSimple.Direction.FORWARD
-        fr.direction = DcMotorSimple.Direction.REVERSE
+        fl.direction = DcMotorSimple.Direction.REVERSE
+        fr.direction = DcMotorSimple.Direction.FORWARD
         bl.direction = DcMotorSimple.Direction.FORWARD
         br.direction = DcMotorSimple.Direction.REVERSE
 
