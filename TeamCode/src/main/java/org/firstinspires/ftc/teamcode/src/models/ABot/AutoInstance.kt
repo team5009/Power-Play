@@ -10,11 +10,18 @@ import kotlin.math.abs
 
 class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     val vuforiaKey: String = hardware.appContext.assets.open("vuforiaKey.txt").bufferedReader().use { it.readText() }
-    private val fl: DcMotor = hardware.get("FL") as DcMotor
-    private val fr: DcMotor = hardware.get("FR") as DcMotor
-    private val br: DcMotor = hardware.get("BR") as DcMotor
-    private val bl: DcMotor = hardware.get("BL") as DcMotor
-    var camera: CameraName = hardware.get("Webcam") as CameraName
+    val fl:      DcMotor =    hardware.get("FL")      as DcMotor
+    val fr:      DcMotor =    hardware.get("FR")      as DcMotor
+    val br:      DcMotor =    hardware.get("BR")      as DcMotor
+    val bl:      DcMotor =    hardware.get("BL")      as DcMotor
+    var camera:  CameraName = hardware.get(WebcamName::class.java, "Webcam")
+    val extArm:  DcMotor =    hardware.get("Extendo") as DcMotor
+    val extLift: DcMotor =    hardware.get("Elevato") as DcMotor
+    val cupArm:  DcMotor =    hardware.get("cupArm")  as DcMotor
+    val gripX: Servo =        hardware.get("grip")    as Servo
+    val gripY: Servo =        hardware.get("dropper") as Servo
+
+
     private val telemetry: Telemetry = t
     private val pi: Double = Math.PI
     private val radius: Double = 7.036308765
@@ -24,8 +31,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
 
     init {
         // Set Each Wheel Direction
-        fl.direction = DcMotorSimple.Direction.REVERSE
-        fr.direction = DcMotorSimple.Direction.FORWARD
+        fl.direction = DcMotorSimple.Direction.FORWARD
+        fr.direction = DcMotorSimple.Direction.REVERSE
         bl.direction = DcMotorSimple.Direction.FORWARD
         br.direction = DcMotorSimple.Direction.REVERSE
 
@@ -36,11 +43,11 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
-    private fun resetDriveEncoders() {
+    fun resetDriveEncoders() {
         fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        fr.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        bl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        br.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
     private fun stop(bool: Boolean = true) {
         if (bool) {
@@ -56,22 +63,14 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         }
     }
 
-    fun move(Direction: String = "Forwards", Inches: Int, Power: Int, brake: Boolean) {
+    fun move( Inches: Int, Power: Int, brake: Boolean) {
         try {
             val distance = inchToTick(Inches.toDouble())
 
-            val power: Double = if (Direction == "Backwards"){
-                -Power.toDouble()
-            } else (if (Direction == "Forwards"){
-                Power.toDouble()
-            } else {
-                Power.toDouble()
-            })
-
-            fl.power = power
-            fr.power = power
-            bl.power = power
-            br.power = power
+            fl.power = Power.toDouble()
+            fr.power = Power.toDouble()
+            bl.power = Power.toDouble()
+            br.power = Power.toDouble()
 
             while (instance.opModeIsActive() && abs(fr.currentPosition) < distance && abs(fl.currentPosition) < distance){
                 telemetry.addData("Target Tics", distance);
@@ -114,5 +113,6 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private fun targetDegrees(degrees: Double) : Double {
         return inchToTick((radius * pi * degrees)/180)
     }
+
 }
 

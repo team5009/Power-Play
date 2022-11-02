@@ -14,7 +14,7 @@ class TestDrive: LinearOpMode() {
 
         waitForStart()
         while (opModeIsActive()) {
-            bot?.move("Forwards", 10, 1, true)
+            bot?.move( 10, 1, true)
             bot?.pivot(90, 1)
         }
     }

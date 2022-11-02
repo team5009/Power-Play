@@ -73,24 +73,47 @@ class NormalOpMode : LinearOpMode() {
         }
     }
     private fun gamepadTwo(bot: TeleInstance, t: Telemetry) {
-        if (gamepad2.x){
+        // Controls to the Extender (Horizontal Arm)
+        if (gamepad2.dpad_left){
+            //Backward Movement
+            //bot.gripX.position = 1.0
             bot.pick(-pow)
-
-        } else {
-            bot.pick(0.0)
-        }
-        if (gamepad2.b){
+        } else if (gamepad2.dpad_right){
+            //Forward Movement
             bot.pick(pow)
         } else {
             bot.pick(0.0)
         }
+        // Controls to the Elevator (Vertical Arm)
+        if (gamepad2.dpad_up) {
+            //Elevator Up
+            bot.extLift.power = -0.8
+        } else if (gamepad2.dpad_down){
+            //Elevator Down
+            bot.extLift.power = 0.8
+        } else {
+            bot.extLift.power = 0.0
+        }
 
-        if(gamepad2.dpad_left) {
+        // Controls to the Grabber(X Axis)
+        if(gamepad2.x) {
             bot.cupArm.power = 0.8
-        } else if (gamepad2.dpad_right) {
+        } else if (gamepad2.b && !gamepad2.start) {
             bot.cupArm.power = -0.8
         } else {
             bot.cupArm.power = 0.0
+        }
+
+        if (gamepad2.y) {
+            bot.gripX.position = 1.0
+        } else if (gamepad2.a) {
+            bot.gripX.position = 0.0
+        }
+
+        if (gamepad2.left_bumper){
+            bot.gripY.position = 1.0
+        } else if (gamepad2.right_bumper) {
+            bot.gripY.position = 0.0
         }
     }
 }

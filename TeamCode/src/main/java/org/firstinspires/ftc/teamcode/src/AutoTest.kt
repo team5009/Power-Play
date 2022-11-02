@@ -6,14 +6,15 @@ import org.firstinspires.ftc.teamcode.src.models.ABot.AutoInstance
 
 @Autonomous(name = "Auto Test", group = "Autonomous Mode")
 class AutoTest: LinearOpMode() {
-    private var bot: AutoInstance? = null
     override fun runOpMode() {
-        bot = AutoInstance(this, hardwareMap, telemetry)
+        val bot = AutoInstance(this, hardwareMap, telemetry)
+        bot.resetDriveEncoders()
         telemetry.addData("Status", "Ready to Start")
         telemetry.update()
+
         waitForStart()
         while(opModeIsActive()) {
-            bot?.move("Forward", 10, 1, true)
+            bot.move(10, 1, true)
             sleep(500)
         }
 
