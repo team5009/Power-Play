@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.*
 import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
+import java.lang.Thread.sleep
+import kotlin.math.PI
 import kotlin.math.abs
 
 class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
@@ -55,11 +57,13 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             fr.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             bl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         } else {
             fl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
             fr.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
             bl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
             br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+            extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         }
     }
 
@@ -112,6 +116,32 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     }
     private fun targetDegrees(degrees: Double) : Double {
         return inchToTick((radius * pi * degrees)/180)
+    }
+     fun lift(brake: Boolean) {
+         val distance = ((1.5 * PI)*2)
+
+         extLift.power = -0.6
+         while (instance.opModeIsActive() && abs(extLift.currentPosition) < distance && abs(extLift.currentPosition) < distance){
+             telemetry.addData("Target Tics", distance);
+             telemetry.addData("ExtArm", fr.currentPosition);
+             telemetry.update();
+         }
+         stop(brake)
+
+         extLift.power = 0.6
+         while (instance.opModeIsActive() && abs(extLift.currentPosition) < distance && abs(extLift.currentPosition) < distance){
+             telemetry.addData("Target Tics", distance);
+             telemetry.addData("extArm", fr.currentPosition);
+             telemetry.update();}
+         stop(brake)
+
+
+     }
+
+    fun handY(){
+        gripY.position = 1.0
+        sleep(500)
+        gripY.position = 0.0
     }
 
 }

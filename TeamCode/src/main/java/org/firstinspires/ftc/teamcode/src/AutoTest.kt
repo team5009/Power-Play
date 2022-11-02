@@ -16,6 +16,7 @@ class AutoTest: LinearOpMode() {
         while(opModeIsActive()) {
             bot.move(10, 1, true)
             sleep(500)
+
         }
 
     }
