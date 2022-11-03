@@ -34,6 +34,8 @@ class NormalOpMode : LinearOpMode() {
             telemetry.addData("GamePad 1Y", gamepad1.left_stick_y)
             telemetry.addData("Grip Servo Pos", bot.gripX.position)
             telemetry.addData("Grip Servo Pos", bot.gripY.position)
+            telemetry.addData("xAxis Sensor", bot.xAxis.state)
+            telemetry.addData("yAxis Sensor", bot.yAxis.state)
             telemetry.update()
 
             val x = gamepad1.left_stick_x

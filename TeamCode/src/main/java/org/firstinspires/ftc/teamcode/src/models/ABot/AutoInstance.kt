@@ -82,7 +82,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             bl.power = Power.toDouble()
             br.power = Power.toDouble()
 
-            while (instance.opModeIsActive() && abs(fr.currentPosition) < distance && abs(fl.currentPosition) < distance){
+            while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
                 telemetry.addData("Target Tics", distance);
                 telemetry.addData("FR", fr.currentPosition);
                 telemetry.update();
@@ -123,7 +123,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private fun targetDegrees(degrees: Double) : Double {
         return inchToTick((radius * pi * degrees)/180)
     }
-     fun liftMax(brake: Boolean) {
+    fun liftMax(brake: Boolean) {
          val distance = ((1.5 * PI)*2)
 
          extLift.power = -0.6
