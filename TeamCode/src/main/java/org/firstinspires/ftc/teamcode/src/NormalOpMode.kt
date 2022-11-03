@@ -13,11 +13,18 @@ import kotlin.math.abs
 @TeleOp(name = "NormalTeleOp", group = "TeleOp Mode")
 class NormalOpMode : LinearOpMode() {
     val deadZone = 0.2
+
+
     var extState = false
+
     var pow: Double = 0.9
 //    private var bot: AutoInstance? = null
+
+
+
     override fun runOpMode() {
         val bot = TeleInstance(this, hardwareMap, telemetry)
+        var cupAngle = (bot.cupTicks/360)
         telemetry.addData(">", "Ready")
         print("Started ----------------------------")
         telemetry.update()
@@ -96,13 +103,14 @@ class NormalOpMode : LinearOpMode() {
         }
 
         // Controls to the Grabber(X Axis)
-        if(gamepad2.x) {
-            bot.cupArm.power = 0.8
-        } else if (gamepad2.b && !gamepad2.start) {
-            bot.cupArm.power = -0.8
-        } else {
+        if(gamepad2.x ) {
+            bot.cupArmyUp()
+        }else if(gamepad2.b) {
+            bot.cupArmyDown()
+        }else{
             bot.cupArm.power = 0.0
         }
+
 
         if (gamepad2.y) {
             bot.gripX.position = 1.0

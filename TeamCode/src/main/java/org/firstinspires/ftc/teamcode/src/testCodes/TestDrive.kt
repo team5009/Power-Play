@@ -18,10 +18,13 @@ class TestDrive: LinearOpMode() {
           //Possibility One
             bot?.move( 62, 1, true)
             bot?.pivot(90, 1)
-            bot?.lift(true)
+            bot?.liftMax(true)
             bot?.gripY
             sleep(1000)
             bot?.move(10, 1, true)
+
+
+         //Possibilty Two
         }
     }
 }

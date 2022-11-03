@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.src.models.ABot
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
+import org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 
@@ -24,15 +25,44 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap, t: Telemetry)
     var camera: CameraName = hardware.get("Webcam") as CameraName
     private val telemetry: Telemetry = t
     private val pi: Double = Math.PI
+    var cupTicks = cupArm.currentPosition
+    var cupAngle = (cupTicks / 360)
+    var ticksPerDegree = (288/360)
     private val radius: Double = 7.036308765
     private val instance = Instance
+
 
     init {
         fl.direction = DcMotorSimple.Direction.FORWARD
         fr.direction = DcMotorSimple.Direction.REVERSE
         bl.direction = DcMotorSimple.Direction.FORWARD
         br.direction = DcMotorSimple.Direction.REVERSE
+        cupArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
+    fun cupArmyUp(){
+            if(cupAngle >= (110 * ticksPerDegree)){
+                floatie()
+            }else {
+                cupArm.power = 0.8
+                 }
+            }
+
+    fun cupArmyDown(){
+
+        if(cupAngle >= (70 * ticksPerDegree)){
+            floatie()
+        }else{
+            cupArm.power = -0.8
+        }
+    }
+
+
+
+
+
+    fun floatie() {
+       cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+   }
 
     fun forward(power: Double) {
         fl.power = power

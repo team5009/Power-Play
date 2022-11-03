@@ -50,6 +50,12 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         fr.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         bl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         br.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+
+        fl.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        fr.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        bl.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        br.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
     private fun stop(bool: Boolean = true) {
         if (bool) {
@@ -117,7 +123,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private fun targetDegrees(degrees: Double) : Double {
         return inchToTick((radius * pi * degrees)/180)
     }
-     fun lift(brake: Boolean) {
+     fun liftMax(brake: Boolean) {
          val distance = ((1.5 * PI)*2)
 
          extLift.power = -0.6
@@ -143,6 +149,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         sleep(500)
         gripY.position = 0.0
     }
+
+
 
 }
 
