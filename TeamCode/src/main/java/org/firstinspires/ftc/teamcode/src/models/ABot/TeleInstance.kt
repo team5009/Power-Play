@@ -16,8 +16,8 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap, t: Telemetry)
     val extLift: DcMotor = hardware.get("Elevato") as DcMotor
     val cupArm: DcMotor = hardware.get("cupArm") as DcMotor
 
-    // val xAxis = hardware.get("xAxis") as DigitalChannel
-    // val yAxis = hardware.get("yAxis") as DigitalChannel
+    val xAxis = hardware.get("xAxis") as DigitalChannel
+    val yAxis = hardware.get("yAxis") as DigitalChannel
 
     val gripX = hardware.get("grip") as Servo
     val gripY = hardware.get("dropper") as Servo
@@ -33,11 +33,17 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap, t: Telemetry)
 
 
     init {
+        // Set Each Wheel Direction
         fl.direction = DcMotorSimple.Direction.FORWARD
         fr.direction = DcMotorSimple.Direction.REVERSE
         bl.direction = DcMotorSimple.Direction.FORWARD
         br.direction = DcMotorSimple.Direction.REVERSE
-        cupArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+        // Behaviour when Motor Power = 0
+        fl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        fr.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        bl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
     fun cupArmyUp(){
             if(cupAngle >= (110 * ticksPerDegree)){
