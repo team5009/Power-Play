@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.src.models.ABot;
+package org.firstinspires.ftc.teamcode.src.models.abot;
 
 import android.graphics.Bitmap;
 
@@ -10,7 +10,6 @@ import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.State;
 import com.vuforia.Vuforia;
 
-import org.checkerframework.checker.units.qual.C;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.robotcore.internal.vuforia.VuforiaLocalizerImpl;

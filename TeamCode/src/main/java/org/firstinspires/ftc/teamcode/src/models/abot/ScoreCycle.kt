@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.src.models.ABot
+package org.firstinspires.ftc.teamcode.src.models.abot
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import kotlin.math.abs
@@ -71,9 +71,6 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
             op.telemetry.addData("Current State", robotState.name)
             op.telemetry.update()
         }
-    }
-    fun stop_test(){
-        robotState = RobotState.DONE
     }
 
     fun scoreCones() {
@@ -197,7 +194,7 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
         if(gripXTime < System.currentTimeMillis()) {
             gripX = GripXState.OPEN
             bot.extArm.power = -0.9
-            bot.cupArm.power = -0.9
+            bot.cupArm.power = -0.8
             cupArmTimeOut = System.currentTimeMillis() + CUP_ARM_DOWNTIME
             robotState = RobotState.CLEARAREA
         }
@@ -207,7 +204,7 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
             robotState = RobotState.DONE
             return
         }
-        if(abs(bot.cupArm.currentPosition) > (70 * 288/360)) { //todo bot.armticks()
+        if(abs(bot.cupArm.currentPosition) > (110 * 288/360)) { //todo bot.armticks()
             bot.cupArm.power = 0.0
         }
         if(cupArmTimeOut < System.currentTimeMillis()) {

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.src.models.ABot
+package org.firstinspires.ftc.teamcode.src.models.abot
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,15 +7,12 @@ import android.graphics.Paint
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.CoroutineScope.*
 import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 import java.lang.Thread.sleep
 import kotlin.math.PI
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
-import java.lang.Thread.sleep
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -49,6 +46,10 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val pi: Double = Math.PI
     private val radius: Double = 8.5 //9.097358
     private val instance = Instance
+
+    enum class Direction {
+        FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN
+    }
 
 
     init {
@@ -116,10 +117,10 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             br.power = Power
 
             while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
-                telemetry.addData("Target Tics", distance);
-                telemetry.addData("FR", fr.currentPosition);
+                telemetry.addData("Target Tics", distance)
+                telemetry.addData("FR", fr.currentPosition)
                 telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
-                telemetry.update();
+                telemetry.update()
             }
             fl.power = 0.0
             fr.power = 0.0
@@ -141,9 +142,6 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             bl.power = power
             br.power = -power
             while (instance.opModeIsActive() && abs(fr.currentPosition) < degree) {
-//                telemetry.addData("Target Tics", degree);
-//                telemetry.addData("FR", fr.currentPosition);
-//                telemetry.update();
             }
             fl.power = 0.0
             fr.power = 0.0
@@ -167,10 +165,10 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             bl.power = -Power
 
             while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
-                telemetry.addData("Target Tics", distance);
-                telemetry.addData("FR", fr.currentPosition);
+                telemetry.addData("Target Tics", distance)
+                telemetry.addData("FR", fr.currentPosition)
                 telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
-                telemetry.update();
+                telemetry.update()
             }
             fl.power = 0.0
             fr.power = 0.0
@@ -225,7 +223,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         delay(50L)
         gripY.position = 0.3
     }
-    private fun extArmInit() {
+    fun extArmInit() {
         extArm.power = 0.9
         while (instance.opModeIsActive() && extArm.currentPosition < extArm(10.0)) {}
         extArm.power = 0.0
@@ -243,58 +241,101 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         }
         return null
     }
-    fun cupArmMove(direction: String) {
-        if (direction.lowercase() == "up") {
-            cupArm.power = 0.8
-            val cupDegree = armDegrees(110.0)
-            while (instance.opModeIsActive() && abs(cupArm.currentPosition) < cupDegree) {
+    fun cupArmMove(direction: Direction) {
+        cupArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        when (direction) {
+            Direction.UP -> {
+                cupArm.power = 0.8
+                while (instance.opModeIsActive() && cupArm.currentPosition < armDegrees(110.0)) {
+                    telemetry.addData("CupArm Position", cupArm.currentPosition)
+                    telemetry.update()
+                }
+                cupArm.power = 0.0
             }
-            cupArm.power = 0.0
-        } else if (direction.lowercase() == "down") {
-            cupArm.power = -0.8
-            val cupDegree = armDegrees(70.0)
-            while (instance.opModeIsActive() && abs(cupArm.currentPosition) > cupDegree) {
+            Direction.DOWN -> {
+                cupArm.power = -0.8
+                while (instance.opModeIsActive() && cupArm.currentPosition > armDegrees(70.0)) {
+                    telemetry.addData("CupArm Position", cupArm.currentPosition)
+                    telemetry.update()
+                }
+                cupArm.power = 0.0
             }
-            cupArm.power = 0.0
+            else -> {
+                return
+            }
         }
     }
-    fun liftMove(direction: String) {
-        if (direction.lowercase() == "up") {
-            extLift.power = 0.9
-            while (instance.opModeIsActive() && extLift.currentPosition < liftDistance(20.0)){}
-            extLift.power = 0.0
-        } else if (direction.lowercase() == "down") {
-            extLift.power = -0.9
-            while (instance.opModeIsActive() && extLift.currentPosition > 200){}
-            extLift.power = 0.0
-        }
-    }
-    fun extArmMove(direction: String) {
-        if (direction.lowercase() == "forward") {
-            extArm.power = 0.9
-            while (instance.opModeIsActive() && extArm.currentPosition < 1000) {
-
+    fun liftMove(direction: Direction) {
+        when (direction) {
+            Direction.UP -> {
+                extLift.power = 0.9
+                while (instance.opModeIsActive() && extLift.currentPosition < liftDistance(20.0)) {
+                    telemetry.addData("Lift Position", extLift.currentPosition)
+                    telemetry.update()
+                }
+                extLift.power = 0.0
             }
-            extArm.power = 0.0
-        } else if (direction.lowercase() == "back") {
-            extArm.power = -0.9
-            while (instance.opModeIsActive() && !xAxis.state) {
+            Direction.DOWN -> {
+                extLift.power = -0.9
+                while (instance.opModeIsActive() && extLift.currentPosition > liftDistance(1.0)) {
+                    telemetry.addData("Lift Position", extLift.currentPosition)
+                    telemetry.update()
+                }
+                extLift.power = 0.0
             }
-            extArm.power = 0.0
+            else -> {
+                return
+            }
         }
     }
-    fun cupHand(type: String) {
-        if (type.lowercase() === "open") {
-            gripX.position = 1.0
-        } else if (type.lowercase() === "close"){
-            gripX.position = 0.0
+    fun extArmMove(direction: Direction) {
+        when (direction) {
+            Direction.UP -> {
+                extArm.power = 0.9
+                while (instance.opModeIsActive() && extArm.currentPosition < extArm(10.0)) {
+                    telemetry.addData("ExtArm Position", extArm.currentPosition)
+                    telemetry.update()
+                }
+                extArm.power = 0.0
+            }
+            Direction.DOWN -> {
+                extArm.power = -0.9
+                while (instance.opModeIsActive() && extArm.currentPosition > extArm(0.0)) {
+                    telemetry.addData("ExtArm Position", extArm.currentPosition)
+                    telemetry.update()
+                }
+                extArm.power = 0.0
+            }
+            else -> {
+                return
+            }
         }
     }
-    fun liftHand(type: String) {
-        if (type.lowercase()== "open") {
-            gripY.position = 1.0
-        } else if (type.lowercase()== "close"){
-            gripY.position = 0.0
+    fun cupHand(type: Direction) {
+        when (type) {
+            Direction.OPEN -> {
+                gripX.position = 0.24
+            }
+            Direction.CLOSE -> {
+                gripX.position = 1.0
+            }
+            else -> {
+                return
+            }
+        }
+    }
+    fun liftHand(type: Direction) {
+        when (type) {
+            Direction.OPEN -> {
+                gripY.position = 1.0
+            }
+            Direction.CLOSE -> {
+                gripY.position = 0.0
+            }
+            else -> {
+                return
+            }
         }
     }
 
@@ -309,17 +350,17 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
 
          extLift.power = -0.6
          while (instance.opModeIsActive() && abs(extLift.currentPosition) < distance && abs(extLift.currentPosition) < distance){
-             telemetry.addData("Target Tics", distance);
-             telemetry.addData("ExtArm", fr.currentPosition);
-             telemetry.update();
+             telemetry.addData("Target Tics", distance)
+             telemetry.addData("ExtArm", fr.currentPosition)
+             telemetry.update()
          }
          stop(brake)
 
          extLift.power = 0.6
          while (instance.opModeIsActive() && abs(extLift.currentPosition) < distance && abs(extLift.currentPosition) < distance){
-             telemetry.addData("Target Tics", distance);
-             telemetry.addData("extArm", fr.currentPosition);
-             telemetry.update();}
+             telemetry.addData("Target Tics", distance)
+             telemetry.addData("extArm", fr.currentPosition)
+             telemetry.update()}
          stop(brake)
 
 
