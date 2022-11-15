@@ -67,7 +67,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     private fun cupArm(direction: Direction, power: Double) {
         when (direction) {
             Direction.FORWARD -> {
-                if (cupArm.currentPosition <= 110 * ticksPerDegree) {
+                if (cupArm.currentPosition <= 70 * ticksPerDegree) {
                     cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                     cupArm.power = 0.0
                 } else {
@@ -75,7 +75,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
                 }
             }
             Direction.BACKWARD -> {
-                if (cupArm.currentPosition >= 70 * ticksPerDegree) {
+                if (cupArm.currentPosition >= 110 * ticksPerDegree) {
                     cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                     cupArm.power = 0.0
                 } else {
@@ -83,7 +83,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
                 }
             }
             else -> {
-                cupArm.power = -0.0
+                return
             }
         }
     }
@@ -129,7 +129,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
                 }
             }
             else -> {
-                extArm.power = -0.0
+                return
             }
         }
     }
@@ -227,11 +227,15 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
             gripY.position = 1.0
         }
     }
+    private fun cycle() {
+        cycle.scoreCones()
+    }
+
     private fun cycle(gamePad: Gamepad) {
-        if (gamePad.share && !process) {
+        if (gamePad.start && gamePad.y && !process) {
             process = true
-            cycle.unit_test()
-        } else if (gamePad.share && process) {
+            cycle()
+        } else if (gamePad.start && gamePad.y && process) {
             process = false
             cycle.robotState = ScoreCycle.RobotState.DONE
         }

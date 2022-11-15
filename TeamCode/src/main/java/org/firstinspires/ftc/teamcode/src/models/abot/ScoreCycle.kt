@@ -74,20 +74,29 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
     }
 
     fun scoreCones() {
-        while(op.opModeIsActive()) {
-            when(robotState) {
-                RobotState.DUMPING -> dumping()
-                RobotState.PICKUP -> pickUp()
-                RobotState.GRABBING -> grabbing()
-                RobotState.RETRACTING -> retracting()
-                RobotState.HANDOVER -> handover()
-                RobotState.CLEARAREA -> clearArea()
-                RobotState.EARLYLIFT -> earlyLift()
-                RobotState.LATELIFT -> lateLift()
-                else -> done()
-            }
-            op.telemetry.addData("Current State", robotState.name)
+        when(robotState) {
+            RobotState.DUMPING -> dumping()
+            RobotState.PICKUP -> pickUp()
+            RobotState.GRABBING -> grabbing()
+            RobotState.RETRACTING -> retracting()
+            RobotState.HANDOVER -> handover()
+            RobotState.CLEARAREA -> clearArea()
+            RobotState.EARLYLIFT -> earlyLift()
+            RobotState.LATELIFT -> lateLift()
+            else -> done()
         }
+    }
+
+
+
+    fun init() {
+        var gripY : GripYState = GripYState.RECEIVE
+        var lift : LiftState = LiftState.BOTTOM
+        var ext : ExtState = ExtState.IN
+        var cupArm : CupArmState = CupArmState.DOWN
+        var gripX : GripXState = GripXState.OPEN
+        var robotState : RobotState = RobotState.CLEARAREA
+
 
     }
 

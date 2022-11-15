@@ -48,7 +48,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val instance = Instance
 
     enum class Direction {
-        FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN
+        FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN, MIDDLE
     }
 
 
@@ -332,6 +332,9 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             }
             Direction.CLOSE -> {
                 gripY.position = 0.0
+            }
+            Direction.MIDDLE -> {
+                gripY.position = 0.7
             }
             else -> {
                 return
