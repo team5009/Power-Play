@@ -44,7 +44,7 @@ class RightSide : LinearOpMode(){
             bot.liftMove(AutoInstance.Direction.UP)
             sleep(100)
             bot.liftHand(AutoInstance.Direction.OPEN)
-            sleep(100)
+            sleep(1200)
             bot.liftMove(AutoInstance.Direction.DOWN)
             sleep(100)
             bot.liftHand(AutoInstance.Direction.MIDDLE)
@@ -76,8 +76,6 @@ class RightSide : LinearOpMode(){
                 }
             }
             bot.liftHand(AutoInstance.Direction.CLOSE)
-            sleep(100)
-            bot.extArmInit()
         }
     }
 }
