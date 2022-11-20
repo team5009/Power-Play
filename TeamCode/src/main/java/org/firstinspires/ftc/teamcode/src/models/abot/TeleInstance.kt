@@ -2,9 +2,14 @@ package org.firstinspires.ftc.teamcode.src.models.abot
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
+//import kotlinx.coroutines.DefaultExecutor.delay
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlin.math.*
+import kotlin.properties.Delegates
 
 class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
+    private val touchSensor = TouchSensor()
     val fl: DcMotor = hardware.get("FL") as DcMotor
     val fr: DcMotor = hardware.get("FR") as DcMotor
     val br: DcMotor = hardware.get("BR") as DcMotor
@@ -14,16 +19,19 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     val extLift: DcMotor = hardware.get("Elevato") as DcMotor
     val cupArm: DcMotor = hardware.get("cupArm") as DcMotor
 
-    val xAxis = hardware.get("xAxis") as DigitalChannel
-    val yAxis = hardware.get("yAxis") as DigitalChannel
+    val xAxis: DigitalChannel = touchSensor.get("xAxis", hardware)
+    val yAxis: DigitalChannel = touchSensor.get("yAxis", hardware)
 
     val gripX = hardware.get("grip") as Servo
     val gripY = hardware.get("dropper") as Servo
 
     var cupAngle = (cupArm.currentPosition / 360)
-    private var ticksPerDegree = (288/360)
-    private val instance = Instance
+    private var isInit = false
     private var process = false
+    private var yPressed = false
+    var ticksPerDegree = 288.0/360.0
+    private val instance = Instance
+
     enum class Direction {
         FORWARD, BACKWARD, UP, DOWN
     }
@@ -33,6 +41,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         fr.direction = DcMotorSimple.Direction.REVERSE
         bl.direction = DcMotorSimple.Direction.FORWARD
         br.direction = DcMotorSimple.Direction.REVERSE
+        extArm.direction = DcMotorSimple.Direction.REVERSE
 
         // Behaviour when Motor Power = 0
         fl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -59,54 +68,99 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         liftMove(gamePad)
         liftHand(gamePad)
         armMove(gamePad)
+        cycleInit(gamePad)
         cycle(gamePad)
+
+//        cycle(gamePad)
     }
 
-    private val cycle = ScoreCycle(instance, this)
+    fun extArmInit() {
+        extArm.power = -0.9
+        while (instance.opModeIsActive() && !xAxis.state){} // Wait for xAxis to be released
+        extArm.power = 0.0
+        Thread.sleep(500)
+        extArm.power = 0.5
+        while (instance.opModeIsActive() && xAxis.state){} // Wait for xAxis to be released
+        extArm.power = 0.0
+        Thread.sleep(500)
+        extArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        extArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
+    }
+    fun cupHandInit() {
+        gripX.position = 0.0
+    }
+    fun liftHandInit() {
+        gripY.position = 0.24
+    }
+    fun liftInit() {
+        if (yAxis.state) {
+            extLift.power = 0.1
+            while (instance.opModeIsActive() && yAxis.state){} // Wait for yAxis to be released
+            extLift.power = 0.0
+            Thread.sleep(100)
+        }
+        extLift.power = -0.5
+        while (instance.opModeIsActive() && abs(extLift.currentPosition) < liftDistance(1.0)){} // Just go up a little bit
+        extLift.power = 0.0
+
+        extLift.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        extLift.mode = DcMotor.RunMode.RUN_USING_ENCODER
+    }
+//    fun cupArmInit() {
+//        cupArm.power = 0.9
+//        while (instance.opModeIsActive() && cupArm.currentPosition < 200.0){} // Just go up a little bit
+//        cupArm.power = 0.0
+//
+//        Thread.sleep(1500)
+//        cupArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+//        cupArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
+//    }
+
+    val cycle = ScoreCycle(instance, this)
 
     private fun cupArm(direction: Direction, power: Double) {
         when (direction) {
             Direction.FORWARD -> {
-                if (cupArm.currentPosition <= 110 * ticksPerDegree) {
-                    cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+                if (abs(cupArm.currentPosition) <= (30 * ticksPerDegree)) {
                     cupArm.power = 0.0
+                    cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 } else {
-                    cupArm.power = power
+                    cupArm.power = -power
                 }
             }
             Direction.BACKWARD -> {
-                if (cupArm.currentPosition >= 70 * ticksPerDegree) {
-                    cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+                if (abs(cupArm.currentPosition) >= (82 * ticksPerDegree)) {
                     cupArm.power = 0.0
+                    cupArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 } else {
                     cupArm.power = power
                 }
             }
             else -> {
-                cupArm.power = -0.0
+                return
             }
         }
     }
     private fun lift(direction: Direction, power: Double) {
         when (direction) {
             Direction.UP -> {
-                if (extLift.currentPosition >= 1000) {
-                    extLift.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-                    extLift.power = 0.0
-                } else {
-                    extLift.power = power
-                }
-            }
-            Direction.DOWN -> {
-                if (extLift.currentPosition <= 0) {
+                if (abs(extLift.currentPosition) >= liftDistance(20.0)) {
                     extLift.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                     extLift.power = 0.0
                 } else {
                     extLift.power = -power
                 }
             }
+            Direction.DOWN -> {
+                if (abs(extLift.currentPosition) <= 0) {
+                    extLift.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+                    extLift.power = 0.0
+                } else {
+                    extLift.power = power
+                }
+            }
             else -> {
-                extLift.power = -0.0
+                extLift.power = 0.0
             }
         }
     }
@@ -129,7 +183,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
                 }
             }
             else -> {
-                extArm.power = -0.0
+                return
             }
         }
     }
@@ -187,10 +241,10 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         }
     }
     private fun cupArmMove(gamePad: Gamepad) {
-        if (gamePad.x) {
-            cupArm(Direction.FORWARD, 0.5)
-        } else if (gamePad.b) {
-            cupArm(Direction.BACKWARD, 0.5)
+        if (gamePad.b) {
+            cupArm(Direction.BACKWARD, 0.9)
+        } else if (gamePad.x) {
+            cupArm(Direction.FORWARD, 0.9)
         } else {
             cupArm(Direction.FORWARD, 0.0)
         }
@@ -207,7 +261,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     private fun cupHand(gamePad: Gamepad){
         if (gamePad.a){
             gripX.position = 0.0
-        } else if (gamePad.y){
+        } else if (!gamePad.start && gamePad.y){
             gripX.position = 1.0
         }
     }
@@ -221,19 +275,39 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         }
     }
     private fun liftHand(gamePad: Gamepad){
-        if (gamePad.a){
-            gripY.position = 0.0
-        } else if (gamePad.y){
+        if (gamePad.left_bumper){
+            gripY.position = 0.24
+        } else if (gamePad.right_bumper){
             gripY.position = 1.0
         }
     }
-    private fun cycle(gamePad: Gamepad) {
-        if (gamePad.share && !process) {
-            process = true
-            cycle.unit_test()
-        } else if (gamePad.share && process) {
-            process = false
-            cycle.robotState = ScoreCycle.RobotState.DONE
+    private fun cycleInit(gamePad: Gamepad){
+        if (gamePad.start && gamePad.x && !isInit) {
+            cycle.init()
+            isInit = true
         }
+    }
+    private fun cycle(gamePad: Gamepad) {
+
+        if (gamePad.start && gamePad.y && !yPressed && !process && isInit){
+            yPressed = true
+            isInit = false
+            process = true
+            while(process && instance.opModeIsActive()) {
+                if (!gamePad.y && yPressed) {
+                    yPressed = false
+                } else if (gamePad.y && !yPressed && process) {
+                    process = false
+                    yPressed = true
+                    cycle.robotState = ScoreCycle.RobotState.DONE
+                }
+                cycle.scoreCones()
+            }
+        } else if (!gamePad.y && yPressed) {
+            yPressed = false
+        }
+    }
+    private fun liftDistance(distance: Double): Double {
+        return distance * 118
     }
 }

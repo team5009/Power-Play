@@ -37,7 +37,7 @@ class LeftSide : LinearOpMode(){
             sleep(100)
             bot.pivot(75, .9)
             sleep(100)
-            bot.strafe(2.0, .9)
+            bot.strafe(2.0, -.9)
             sleep(100)
             bot.move(0.5, -.5, true)
             sleep(100)
@@ -45,8 +45,9 @@ class LeftSide : LinearOpMode(){
             sleep(100)
             bot.liftHand(AutoInstance.Direction.OPEN)
             sleep(1200)
-            bot.liftHand(AutoInstance.Direction.CLOSE)
             bot.liftMove(AutoInstance.Direction.DOWN)
+            sleep(100)
+            bot.liftHand(AutoInstance.Direction.MIDDLE)
             sleep(100)
             bot.pivot(50, .9)
             sleep(100)
@@ -74,6 +75,8 @@ class LeftSide : LinearOpMode(){
                     sleep(100)
                 }
             }
+            bot.liftHand(AutoInstance.Direction.CLOSE)
+            sleep(100)
             bot.extArmInit()
         }
     }

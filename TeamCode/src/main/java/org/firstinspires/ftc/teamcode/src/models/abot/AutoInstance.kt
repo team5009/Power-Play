@@ -12,14 +12,14 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 import java.lang.Thread.sleep
 import kotlin.math.PI
+import org.firstinspires.ftc.teamcode.src.models.abot.TouchSensor
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import kotlin.math.abs
 import kotlin.math.min
 
 class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
+    private val touchSensor = TouchSensor()
     val vuforiaKey: String = hardware.appContext.assets.open("vuforiaKey.txt").bufferedReader().use { it.readText() }
-
-
     private var canvas: Canvas? = null
     private var red = 0
     private var green = 0
@@ -35,8 +35,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val cupArm:  DcMotor        =    hardware.get("cupArm")  as DcMotor
     private val gripX:   Servo          =    hardware.get("grip")    as Servo
     private val gripY:   Servo          =    hardware.get("dropper") as Servo
-    private val xAxis:   DigitalChannel =    hardware.get("xAxis")   as DigitalChannel
-    private val yAxis:   DigitalChannel =    hardware.get("yAxis")   as DigitalChannel
+    private val xAxis:   DigitalChannel =    touchSensor.get("xAxis", hardware)
+    private val yAxis:   DigitalChannel =    touchSensor.get("yAxis", hardware)
     var camera:          CameraName     =    hardware.get("Webcam")  as WebcamName
 
     private val cameraMonitorViewId = hardware.appContext.resources.getIdentifier("cameraMonitorViewId", "id", hardware.appContext.packageName)
@@ -48,7 +48,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val instance = Instance
 
     enum class Direction {
-        FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN
+        FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN, MIDDLE
     }
 
 
@@ -225,7 +225,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     }
     fun extArmInit() {
         extArm.power = 0.9
-        while (instance.opModeIsActive() && extArm.currentPosition < extArm(10.0)) {}
+        while (instance.opModeIsActive() && !xAxis.state) {}
         extArm.power = 0.0
     }
 
@@ -333,6 +333,9 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             Direction.CLOSE -> {
                 gripY.position = 0.0
             }
+            Direction.MIDDLE -> {
+                gripY.position = 0.7
+            }
             else -> {
                 return
             }
@@ -382,8 +385,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         return inch * ((1.5 * pi)*2)
     }
     fun seeSignal(bitSave: Bitmap, vuforia: Cam): Int {
-        val left = 361 + 35 - 76 - 160 + 130 // pixels from left of image to left edge of ring stack
-        val top = 168 // pixels from top of image to top of a 4 ring stack
+        val left = 230 // pixels from left of image to left edge of ring stack
+        val top = 280 // pixels from top of image to top of a 4 ring stack
         val right = left + 75 // pixels from left of image to right edge of ring stack
         val bottom = top + 150 // pixels from top of image to bottom of ring stack
 
