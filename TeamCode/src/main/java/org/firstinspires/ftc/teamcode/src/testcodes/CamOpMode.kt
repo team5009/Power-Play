@@ -24,9 +24,8 @@ class CamOpMode: LinearOpMode() {
 
         while(opModeIsActive()) {
             if (gamepad1.a || gamepad2.a) {
-                bitmap = bot.checkTarget(vuforia)!!
-                val target = bot.seeSignal(bitmap, vuforia)
-                telemetry.addData("info", target)
+//                val target = bot.seeSignal(bitmap, vuforia)
+//                telemetry.addData("info", target)
                 telemetry.update()
             }
         }

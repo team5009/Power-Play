@@ -29,6 +29,7 @@ class RegularOpMode: LinearOpMode() {
             telemetry.addData("Robot State", bot.cycle.robotState.name)
             telemetry.addData("Wheel Encoder", bot.fl.currentPosition)
             telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition)
+            telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition <= -1000)
             telemetry.addData("ExtLift Encoder", bot.extLift.currentPosition)
             telemetry.addData("CupArm Encoder", bot.cupArm.power)
             telemetry.addData("CupArm Angle", bot.cupArm.currentPosition * bot.ticksPerDegree)

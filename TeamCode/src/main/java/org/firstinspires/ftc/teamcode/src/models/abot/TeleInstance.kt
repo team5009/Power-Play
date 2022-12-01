@@ -61,8 +61,8 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
 
     fun gamePadOne(gamePad: Gamepad = instance.gamepad1) {
         moveControls(gamePad)
-        cupArmMove(gamePad)
         cupHand(gamePad)
+        cupArmMove(gamePad)
     }
     fun gamePadTwo(gamePad: Gamepad = instance.gamepad2) {
         liftMove(gamePad)
@@ -70,8 +70,6 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         armMove(gamePad)
         cycleInit(gamePad)
         cycle(gamePad)
-
-//        cycle(gamePad)
     }
 
     fun extArmInit() {
@@ -167,19 +165,19 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     private fun arm(direction: Direction, power: Double) {
         when (direction) {
             Direction.FORWARD -> {
-                if (extArm.currentPosition >= 1000) {
-                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+                if (abs(extArm.currentPosition) >= 118 * 14) {
                     extArm.power = 0.0
+                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                 } else {
-                    extArm.power = power
+                    extArm.power = -power
                 }
             }
             Direction.BACKWARD -> {
-                if (extArm.currentPosition <= 0) {
-                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+                if (abs(extArm.currentPosition) <= 50.0) {
                     extArm.power = 0.0
+                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                 } else {
-                    extArm.power = -power
+                    extArm.power = power
                 }
             }
             else -> {
@@ -241,20 +239,20 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         }
     }
     private fun cupArmMove(gamePad: Gamepad) {
-        if (gamePad.b) {
+        if (gamePad.b && !process) {
             cupArm(Direction.BACKWARD, 0.9)
-        } else if (gamePad.x) {
+        } else if (gamePad.x && !process) {
             cupArm(Direction.FORWARD, 0.9)
-        } else {
+        } else if (!process) {
             cupArm(Direction.FORWARD, 0.0)
         }
     }
     private fun armMove(gamePad: Gamepad) {
-        if (gamePad.dpad_left) {
+        if (gamePad.dpad_right && !process) {
             arm(Direction.FORWARD, 0.5)
-        } else if (gamePad.dpad_right) {
+        } else if (gamePad.dpad_left && !process) {
             arm(Direction.BACKWARD, 0.5)
-        } else {
+        } else if (!process) {
             arm(Direction.FORWARD, 0.0)
         }
     }

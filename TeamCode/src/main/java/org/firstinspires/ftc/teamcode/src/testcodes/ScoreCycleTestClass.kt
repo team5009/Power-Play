@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode.src.models.abot
+package org.firstinspires.ftc.teamcode.src.testcodes
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.DcMotor
+import org.firstinspires.ftc.teamcode.src.models.abot.TeleInstance
 import kotlin.math.abs
 
+class ScoreCycleTestClass(opMode: LinearOpMode, robot: TeleInstance) {
 
-class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
     enum class GripYState {RECEIVE, DUMPING, DUMP, RESETTING}
     enum class LiftState {BOTTOM, RISING, TOP, LOWERING}
     enum class ExtState {IN, EXTENDING, READY, OUT, RETRACTING}
@@ -14,16 +14,14 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
 
     enum class RobotState {DUMPING, PICKUP, GRABBING, RETRACTING, HANDOVER, CLEARAREA, EARLYLIFT, LATELIFT, DONE}
 
+    var gripY : GripYState = GripYState.RECEIVE
+    var lift : LiftState = LiftState.BOTTOM
+    var ext : ExtState = ExtState.IN
+    var cupArm : CupArmState = CupArmState.DOWN
+    var gripX : GripXState = GripXState.OPEN
+    var robotState : RobotState = RobotState.CLEARAREA
     private val op = opMode
     private val bot = robot
-
-    lateinit var gripY : GripYState
-    lateinit var lift : LiftState
-    lateinit var ext : ExtState
-    lateinit var cupArm : CupArmState
-    lateinit var gripX : GripXState
-    var robotState : RobotState = RobotState.DUMPING
-
     var gripYTime : Long = 0
     var gripXTime : Long = 0
     var extTimeOut : Long = 0
@@ -36,14 +34,14 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
     val LIFT_RISING = 118 * 12
     val LIFT_MAX = 118 * 20
     val DUMP_TIME = 1000
-    val EXT_ARM_MAX = 118 * 11
+    val EXT_ARM_MAX = 118 * 14
     val EXT_ARM_READY = 118 * 4.5
     val EXT_ARM_MIN = 380
     val EXT_ARM_TIME = 1500
     val GRAB_TIME = 1200
     val CUP_ARM_UPTIME = 1800
     val CUP_ARM_DOWNTIME = 800
-    val GRIP_X_OPEN = 0.5
+    val GRIP_X_OPEN = 0.0
     val GRIP_X_CLOSED = 1.0
     val GRIP_Y_RECEIVE = 0.24
     val GRIP_Y_DUMP = 1.0
@@ -76,41 +74,22 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
         }
     }
 
-    fun scoreCones(){
-        when(robotState) {
-            RobotState.RETRACTING -> retracting()
-            RobotState.HANDOVER -> handover()
-            RobotState.CLEARAREA -> clearArea()
-            RobotState.EARLYLIFT -> earlyLift()
-            RobotState.LATELIFT -> lateLift()
-            RobotState.DUMPING -> dumping()
-            RobotState.PICKUP -> pickUp()
-            RobotState.GRABBING -> grabbing()
-            else -> done()
+    fun scoreCones() {
+        while(op.opModeIsActive()) {
+            when(robotState) {
+                RobotState.DUMPING -> dumping()
+                RobotState.PICKUP -> pickUp()
+                RobotState.GRABBING -> grabbing()
+                RobotState.RETRACTING -> retracting()
+                RobotState.HANDOVER -> handover()
+                RobotState.CLEARAREA -> clearArea()
+                RobotState.EARLYLIFT -> earlyLift()
+                RobotState.LATELIFT -> lateLift()
+                else -> done()
+            }
+            op.telemetry.addData("Current State", robotState.name)
         }
-    }
 
-
-
-    fun init() {
-        robotState = RobotState.RETRACTING
-        gripY = GripYState.RECEIVE
-        lift = LiftState.BOTTOM
-        ext = ExtState.IN
-        cupArm = CupArmState.UP
-        gripX = GripXState.CLOSED
-
-        bot.extArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        bot.extArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
-//        bot.cupArmInit()
-//        Thread.sleep(1000)
-//        bot.extArmInit()
-//        Thread.sleep(1000)
-//        bot.cupHandInit()
-//        Thread.sleep(1000)
-//        bot.liftInit()
-//        Thread.sleep(100)
-//        bot.liftHandInit()
     }
 
     private fun dumping() {
@@ -183,7 +162,7 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
             robotState = RobotState.DONE
             return
         }
-        if(abs(bot.cupArm.currentPosition) >= (110 * 288.0/360.0)) { //todo bot.armticks()
+        if(abs(bot.cupArm.currentPosition) < (90 * 288/360)) { //todo bot.armticks()
             bot.cupArm.power = 0.0
         }
         if(cupArmTimeOut < System.currentTimeMillis()) {
@@ -217,7 +196,6 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
             gripX = GripXState.OPEN
             bot.extArm.power = -0.9
             bot.cupArm.power = -0.8
-            bot.gripX.position = GRIP_X_CLOSED
             cupArmTimeOut = System.currentTimeMillis() + CUP_ARM_DOWNTIME
             robotState = RobotState.CLEARAREA
         }
@@ -227,7 +205,7 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
             robotState = RobotState.DONE
             return
         }
-        if(abs(bot.cupArm.currentPosition) <= (90 * 288/360)) { //todo bot.armticks()
+        if(abs(bot.cupArm.currentPosition) > (110 * 288/360)) { //todo bot.armticks()
             bot.cupArm.power = 0.0
         }
         if(cupArmTimeOut < System.currentTimeMillis()) {
@@ -280,4 +258,5 @@ class ScoreCycle (opMode: LinearOpMode, robot: TeleInstance){
         bot.extLift.power = 0.0
         bot.extArm.power = 0.0
     }
+
 }
