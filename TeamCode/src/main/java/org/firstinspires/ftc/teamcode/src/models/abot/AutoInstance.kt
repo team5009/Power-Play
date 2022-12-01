@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.src.models.abot.TouchSensor
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val touchSensor = TouchSensor()
@@ -46,6 +47,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val pi: Double = Math.PI
     private val radius: Double = 8.5 //9.097358
     private val instance = Instance
+
+    var parkingZone: Int = 2
 
     enum class Direction {
         FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN, MIDDLE
@@ -229,17 +232,21 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         extArm.power = 0.0
     }
 
-    fun checkTarget(vuforia: Cam): Bitmap?{
-        val bitSave : Bitmap
-        if(vuforia.rgb != null) {
-            val bmp: Bitmap = Bitmap.createBitmap(vuforia.rgb.width,vuforia.rgb.height, Bitmap.Config.RGB_565)
-            bmp.copyPixelsFromBuffer(vuforia.rgb.pixels)
-            bitSave = bmp
-            telemetry.addData("Hello World", bmp.getPixel(30,30))
-            telemetry.update()
-            return bitSave
+    fun checkTarget(vuforia: Cam) {
+        var bitSave : Bitmap
+        while (instance.opModeInInit()) {
+            if(vuforia.rgb != null) {
+                val bmp: Bitmap = Bitmap.createBitmap(vuforia.rgb.width,vuforia.rgb.height, Bitmap.Config.RGB_565)
+                bmp.copyPixelsFromBuffer(vuforia.rgb.pixels)
+                bitSave = bmp
+                seeSignal(bitSave, vuforia)
+                telemetry.addData("Current Parking Zone:", parkingZone)
+                telemetry.update()
+                if (!instance.opModeInInit()) {
+                    vuforia.saveBitmap(instance, bitSave)
+                }
+            }
         }
-        return null
     }
     fun cupArmMove(direction: Direction) {
         cupArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -385,19 +392,16 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         return inch * ((1.5 * pi)*2)
     }
     fun seeSignal(bitSave: Bitmap, vuforia: Cam): Int {
-        val left = 230 // pixels from left of image to left edge of ring stack
+        val left = 300 // pixels from left of image to left edge of ring stack (max)
         val top = 280 // pixels from top of image to top of a 4 ring stack
-        val right = left + 75 // pixels from left of image to right edge of ring stack
-        val bottom = top + 150 // pixels from top of image to bottom of ring stack
+        val right = left + 150 // pixels from left of image to right edge of ring stack
+        val bottom = top + 50 // pixels from top of image to bottom of ring stackstack
 
         val paint = Paint()
-        val parkingZone: Int = signalType(left, right, top, bottom, bitSave)
-
-        telemetry.addData("Zone", parkingZone)
+        parkingZone = signalType2(left, right, top, bottom, bitSave)
         canvas = Canvas(bitSave)
         val s = String.format("Zone: %d", parkingZone)
         canvas!!.drawText(s, left.toFloat(),  bottom.toFloat(), paint)
-        vuforia.saveBitmap(instance, bitSave)
         return parkingZone
     }
 
@@ -437,6 +441,53 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         } else {
             if(green >= blue) { 3 } else { 2 }
         }
+    }
+    private fun checkColumn(x: Int, t: Int, b: Int, bitSave: Bitmap) : Int {
+        val colors = IntArray(7)
+        var hsv = FloatArray(3)
+        for (y in t until b) {
+            val p: Int = bitSave.getPixel(x, y)
+
+            Color.colorToHSV(p, hsv)
+
+            val hue = ((hsv[0] / 60.0).roundToInt() % 6)
+            colors[hue+1] += 1
+        }
+        var maxColor = colors.indexOf(colors.maxOrNull()?: 0)
+        var dom = Color.rgb(255, 255, 255)
+        if (maxColor == 1) {  // seeing red
+            dom = Color.rgb(255, 0, 0)
+        } else if (maxColor == 2) { //seeing yellow
+            dom = Color.rgb(0, 255, 255)
+        } else if (maxColor == 5) { //seeing blue
+            dom = Color.rgb(0, 0, 255)
+        } else {
+            maxColor = -1
+        }
+        for (y in t until b) {
+            bitSave.setPixel(x, y, dom)
+        }
+        return maxColor
+    }
+    private fun signalType2(l: Int, r: Int, t: Int, b: Int, bitSave: Bitmap): Int {
+        var prev = -1
+        var best = 0
+        var count = 0
+        var maxLen = -1
+        for (i in l until r) {
+            val cur = checkColumn(i,t,b,bitSave)
+            if (cur != -1 && prev == cur) {
+                count += 1
+                if (best < count) {
+                    best = count
+                    maxLen = cur
+                }
+            } else {
+                count = 1
+            }
+            prev = cur
+        }
+        return maxLen
     }
 }
 

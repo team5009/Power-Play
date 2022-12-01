@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.src.autonomous
 import android.graphics.Bitmap
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import org.firstinspires.ftc.teamcode.src.models.abot.AutoInstance
 import org.firstinspires.ftc.teamcode.src.models.abot.Cam
@@ -17,14 +19,12 @@ class RightSide : LinearOpMode(){
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
         params.cameraName = bot.camera
         val vuforia = Cam(params)
-        var bitmap: Bitmap? = null
-        telemetry.addData("Status", "Ready")
-        telemetry.update()
-        waitForStart()
-        while (bitmap == null) {
-            bitmap = bot.checkTarget(vuforia)
+        val scan = GlobalScope.launch {
+            bot.checkTarget(vuforia)
         }
-        val target = bot.seeSignal(bitmap, vuforia)
+
+        waitForStart()
+        val target = bot.parkingZone
         if (opModeIsActive()) {
             telemetry.addData("info", target)
             telemetry.update()
@@ -62,11 +62,11 @@ class RightSide : LinearOpMode(){
                     bot.cupArmMove(AutoInstance.Direction.DOWN)
                     sleep(100)
                 }
-                2 -> {
+                5 -> {
                     bot.move(1.0, .9, true)
                     sleep(50)
                 }
-                3 -> {
+                2 -> {
                     bot.cupArmMove(AutoInstance.Direction.UP)
                     sleep(100)
                     bot.strafe(30.0, .9)
