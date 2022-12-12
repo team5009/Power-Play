@@ -1,12 +1,9 @@
 package org.firstinspires.ftc.teamcode.src.models.abot
 
+//import kotlinx.coroutines.DefaultExecutor.delay
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
-//import kotlinx.coroutines.DefaultExecutor.delay
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlin.math.*
-import kotlin.properties.Delegates
+import kotlin.math.abs
 
 class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     private val touchSensor = TouchSensor()
@@ -22,16 +19,17 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     val xAxis: DigitalChannel = touchSensor.get("xAxis", hardware)
     val yAxis: DigitalChannel = touchSensor.get("yAxis", hardware)
 
-    val gripX = hardware.get("grip") as Servo
-    val gripY = hardware.get("dropper") as Servo
+    val gripX:   Servo          =    hardware.get("grip")    as Servo
+    val gripY:   Servo          =    hardware.get("dropper") as Servo
 
-    var cupAngle = (cupArm.currentPosition / 360)
+    var cupAngle = (cupArm.currentPosition / 360.0)
+
     private var isInit = false
     private var process = false
     private var yPressed = false
     var ticksPerDegree = 288.0/360.0
     private val instance = Instance
-
+    val cycle = ScoreCycle(instance, this)
     enum class Direction {
         FORWARD, BACKWARD, UP, DOWN
     }
@@ -48,6 +46,8 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         fr.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         bl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        extLift.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
         // Set Encoder Mode
         extArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -59,12 +59,12 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         cupArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
 
-    fun gamePadOne(gamePad: Gamepad = instance.gamepad1) {
+    suspend fun gamePadOne(gamePad: Gamepad = instance.gamepad1) {
         moveControls(gamePad)
         cupHand(gamePad)
         cupArmMove(gamePad)
     }
-    fun gamePadTwo(gamePad: Gamepad = instance.gamepad2) {
+    suspend fun gamePadTwo(gamePad: Gamepad = instance.gamepad2) {
         liftMove(gamePad)
         liftHand(gamePad)
         armMove(gamePad)
@@ -73,11 +73,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     }
 
     fun extArmInit() {
-        extArm.power = -0.9
-        while (instance.opModeIsActive() && !xAxis.state){} // Wait for xAxis to be released
-        extArm.power = 0.0
-        Thread.sleep(500)
-        extArm.power = 0.5
+        extArm.power = 0.3
         while (instance.opModeIsActive() && xAxis.state){} // Wait for xAxis to be released
         extArm.power = 0.0
         Thread.sleep(500)
@@ -85,24 +81,29 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         extArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
     fun cupHandInit() {
-        gripX.position = 0.0
+        gripX.position = 0.2
     }
     fun liftHandInit() {
         gripY.position = 0.24
     }
     fun liftInit() {
-        if (yAxis.state) {
+        if (!yAxis.state) {
             extLift.power = 0.1
-            while (instance.opModeIsActive() && yAxis.state){} // Wait for yAxis to be released
+            while (instance.opModeIsActive() && !yAxis.state){} // Wait for yAxis to be released
             extLift.power = 0.0
             Thread.sleep(100)
         }
-        extLift.power = -0.5
-        while (instance.opModeIsActive() && abs(extLift.currentPosition) < liftDistance(1.0)){} // Just go up a little bit
+        extLift.power = -0.2
+        while (instance.opModeIsActive() && abs(extLift.currentPosition) < liftDistance(1.5)){} // Just go up a little bit
         extLift.power = 0.0
 
         extLift.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         extLift.mode = DcMotor.RunMode.RUN_USING_ENCODER
+    }
+    private fun extArmBack() {
+        extArm.power = 0.5
+        while (instance.opModeIsActive() && extArm.currentPosition <= 325) {}
+        extArm.power = 0.0
     }
 //    fun cupArmInit() {
 //        cupArm.power = 0.9
@@ -114,7 +115,7 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
 //        cupArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
 //    }
 
-    val cycle = ScoreCycle(instance, this)
+
 
     private fun cupArm(direction: Direction, power: Double) {
         when (direction) {
@@ -165,20 +166,10 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
     private fun arm(direction: Direction, power: Double) {
         when (direction) {
             Direction.FORWARD -> {
-                if (abs(extArm.currentPosition) >= 118 * 14) {
-                    extArm.power = 0.0
-                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-                } else {
-                    extArm.power = -power
-                }
+                extArm.power = -power
             }
             Direction.BACKWARD -> {
-                if (abs(extArm.currentPosition) <= 50.0) {
-                    extArm.power = 0.0
-                    extArm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-                } else {
-                    extArm.power = power
-                }
+                extArm.power = power
             }
             else -> {
                 return
@@ -204,11 +195,12 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         bl.power = -power
     }
 
+
     private fun moveControls(gamePad: Gamepad) {
         val y = gamePad.left_stick_y
         val x = gamePad.left_stick_x
         val deadZone = 0.2
-        val pow = 0.9
+        val pow = 0.8
 
         if (abs(y) > abs(x) && y < -deadZone) {
             forward(pow)
@@ -230,18 +222,18 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
             strafe(pow)
         } else if (gamePad.right_bumper){
             strafe(-pow)
-        } else if (gamePad.left_trigger > 0.0){
+        } else if (gamePad.left_trigger > 0.25){
             strafe(pow/2.5 * gamePad.left_trigger)
-        } else if (gamePad.right_trigger > 0.0){
-            strafe(pow/2.5 * gamePad.left_trigger)
+        } else if (gamePad.right_trigger > 0.25){
+            strafe(-(pow/2.5 * gamePad.right_trigger))
         } else {
             forward(0.0)
         }
     }
     private fun cupArmMove(gamePad: Gamepad) {
-        if (gamePad.b && !process) {
+        if (gamePad.x && !process) {
             cupArm(Direction.BACKWARD, 0.9)
-        } else if (gamePad.x && !process) {
+        } else if (gamePad.b && !process) {
             cupArm(Direction.FORWARD, 0.9)
         } else if (!process) {
             cupArm(Direction.FORWARD, 0.0)
@@ -252,6 +244,8 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
             arm(Direction.FORWARD, 0.5)
         } else if (gamePad.dpad_left && !process) {
             arm(Direction.BACKWARD, 0.5)
+        } else if (gamePad.back && !process) {
+            extArmBack()
         } else if (!process) {
             arm(Direction.FORWARD, 0.0)
         }
@@ -279,8 +273,10 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
             gripY.position = 1.0
         }
     }
+
+
     private fun cycleInit(gamePad: Gamepad){
-        if (gamePad.start && gamePad.x && !isInit) {
+        if (gamePad.start && gamePad.x) {
             cycle.init()
             isInit = true
         }
@@ -299,6 +295,15 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
                     yPressed = true
                     cycle.robotState = ScoreCycle.RobotState.DONE
                 }
+                if (gamePad.dpad_down) {
+                    cycle.EXT_ARM_MIN = 50.0
+                    cycle.EXT_ARM_READY = cycle.EXT_ARM_MIN
+                    cycle.EXT_ARM_MAX = cycle.EXT_ARM_MIN
+                } else if (gamePad.dpad_up) {
+                    cycle.EXT_ARM_MIN = 150.0
+                    cycle.EXT_ARM_READY = 118.0/3.0 * 6
+                    cycle.EXT_ARM_MAX = 118.0/3.0 * 14
+                }
                 cycle.scoreCones()
             }
         } else if (!gamePad.y && yPressed) {
@@ -306,6 +311,6 @@ class TeleInstance (Instance: LinearOpMode, hardware: HardwareMap){
         }
     }
     private fun liftDistance(distance: Double): Double {
-        return distance * 118
+        return distance * (1.5*118.0/2.4)
     }
 }

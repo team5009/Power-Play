@@ -2,20 +2,24 @@ package org.firstinspires.ftc.teamcode.src.testcodes
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import org.firstinspires.ftc.teamcode.src.models.abot.ScoreCycle
-import org.firstinspires.ftc.teamcode.src.testcodes.ScoreCycleTestClass
-import org.firstinspires.ftc.teamcode.src.models.abot.TeleInstance
+import org.firstinspires.ftc.teamcode.src.models.abot.AutoInstance
+import org.firstinspires.ftc.teamcode.src.models.abot.AutoScoreCycle
 
 @TeleOp(name = "Scoring Test", group = "TeleOp Test")
 class ScoringTest : LinearOpMode() {
     override fun runOpMode() {
-        val bot = TeleInstance(this, hardwareMap)
-        val scoringCycle = ScoreCycle(this, bot)
+        val bot = AutoInstance(this, hardwareMap, telemetry)
+        val scoringCycle = AutoScoreCycle(this, bot)
 
         waitForStart()
 
         if(opModeIsActive()) {
-            scoringCycle.unit_test()
+            bot.init()
+            sleep(5000)
+            bot.extArmInit()
+            bot.cupArmMove(AutoInstance.Direction.UP)
+            sleep(100)
+            bot.scoreStack()
         }
     }
 }

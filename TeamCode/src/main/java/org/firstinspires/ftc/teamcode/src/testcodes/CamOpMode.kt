@@ -15,7 +15,7 @@ class CamOpMode: LinearOpMode() {
         val params = VuforiaLocalizer.Parameters(cameraMonitorViewId)
         params.vuforiaLicenseKey = bot.vuforiaKey
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
-        params.cameraName = bot.camera
+        params.cameraName = bot.frontCam
         val vuforia = Cam(params)
         var bitmap: Bitmap
         telemetry.addData("Status", "Ready")

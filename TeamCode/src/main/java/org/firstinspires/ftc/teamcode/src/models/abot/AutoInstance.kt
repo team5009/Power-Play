@@ -7,13 +7,13 @@ import android.graphics.Paint
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
 import kotlinx.coroutines.*
-import  org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
+import kotlinx.coroutines.Dispatchers.Main
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import java.lang.Thread.sleep
 import kotlin.math.PI
-import org.firstinspires.ftc.teamcode.src.models.abot.TouchSensor
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -31,14 +31,15 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val fr:      DcMotor        =    hardware.get("FR")      as DcMotor
     private val br:      DcMotor        =    hardware.get("BR")      as DcMotor
     private val bl:      DcMotor        =    hardware.get("BL")      as DcMotor
-    private val extArm:  DcMotor        =    hardware.get("Extendo") as DcMotor
-    private val extLift: DcMotor        =    hardware.get("Elevato") as DcMotor
-    private val cupArm:  DcMotor        =    hardware.get("cupArm")  as DcMotor
-    private val gripX:   Servo          =    hardware.get("grip")    as Servo
-    private val gripY:   Servo          =    hardware.get("dropper") as Servo
+    val extArm:  DcMotor        =    hardware.get("Extendo") as DcMotor
+    val extLift: DcMotor        =    hardware.get("Elevato") as DcMotor
+    val cupArm:  DcMotor        =    hardware.get("cupArm")  as DcMotor
+    val gripX:   Servo          =    hardware.get("grip")    as Servo
+    val gripY:   Servo          =    hardware.get("dropper") as Servo
     private val xAxis:   DigitalChannel =    touchSensor.get("xAxis", hardware)
     private val yAxis:   DigitalChannel =    touchSensor.get("yAxis", hardware)
-    var camera:          CameraName     =    hardware.get("Webcam")  as WebcamName
+    var frontCam:          CameraName     =    hardware.get("FrontCam")  as WebcamName
+//    var backCam:          CameraName     =    hardware.get("BackCam")  as WebcamName
 
     private val cameraMonitorViewId = hardware.appContext.resources.getIdentifier("cameraMonitorViewId", "id", hardware.appContext.packageName)
     private val params: VuforiaLocalizer.Parameters = VuforiaLocalizer.Parameters(cameraMonitorViewId)
@@ -48,7 +49,10 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
     private val radius: Double = 8.5 //9.097358
     private val instance = Instance
 
+    val cycle: AutoScoreCycle = AutoScoreCycle(instance,this)
     var parkingZone: Int = 2
+    lateinit var job: CompletableJob
+    lateinit var bitSave : Bitmap
 
     enum class Direction {
         FORWARD, BACKWARD, OPEN, CLOSE, UP, DOWN, MIDDLE
@@ -70,8 +74,12 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         br.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         extLift.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
+        
+        // Reset Encoders 
+        resetDriveEncoders()
+        
         params.vuforiaLicenseKey = vuforiaKey
-        params.cameraName = camera
+        params.cameraName = frontCam
     }
 
     fun init() {
@@ -81,7 +89,31 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             liftArmInit()
         }
     }
+    fun initJob() {
+        job = Job()
+        job.invokeOnCompletion {
+            it?.message.let {
+                var msg = it
+                if (msg.isNullOrBlank()) {
+                    msg = "Unknown Error"
+                }
+            }
+        }
+    }
+    fun startJob(vuforia: Cam) {
+        CoroutineScope(Main + job).launch {
+            println("Coroutine $this is started with job $job")
+            checkTarget(vuforia)
+        }
+    }
 
+    fun resetJob(vuforia: Cam){
+        vuforia.saveBitmap(instance, bitSave)
+        vuforia.close()
+        if (job.isActive || job.isCompleted) {
+            job.cancel()
+        }
+    }
     fun resetDriveEncoders() {
         fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         fr.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -110,80 +142,72 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         }
     }
 
-    fun move(Inches: Double, Power: Double, brake: Boolean) {
-        try {
-            val distance = inchToTick(Inches)
+    fun move(Inches: Double, Power: Double, brake: Boolean, acceleration: Boolean = false) {
+        val distance = inchToTick(Inches)
 
-            fl.power = Power
-            fr.power = Power
-            bl.power = Power
-            br.power = Power
-
-            while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
-                telemetry.addData("Target Tics", distance)
-                telemetry.addData("FR", fr.currentPosition)
-                telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
-                telemetry.update()
+        if (acceleration) {
+            var i = 0.5
+            while (instance.opModeIsActive() && i <= Power && abs(fr.currentPosition) < distance) {
+                fl.power = i
+                fr.power = i
+                bl.power = i
+                br.power = i
+                i+=0.05
+                sleep(250)
             }
-            fl.power = 0.0
-            fr.power = 0.0
-            bl.power = 0.0
-            br.power = 0.0
-            stop(brake)
-            resetDriveEncoders()
-        } catch (e: Exception) {
-            telemetry.addData("Error: ", e.message)
-            print(e.message)
+        }
+        fl.power = Power
+        fr.power = Power
+        bl.power = Power
+        br.power = Power
+        while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
+            telemetry.addData("Target Tics", distance)
+            telemetry.addData("FR", fr.currentPosition)
+            telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
             telemetry.update()
         }
+        fl.power = 0.0
+        fr.power = 0.0
+        bl.power = 0.0
+        br.power = 0.0
+        stop(brake)
+        resetDriveEncoders()
     }
     fun pivot(degrees: Int, power: Double){
-        try{
-            val degree: Double = targetDegrees(degrees.toDouble())
-            fl.power = power
-            fr.power = -power
-            bl.power = power
-            br.power = -power
-            while (instance.opModeIsActive() && abs(fr.currentPosition) < degree) {
-            }
-            fl.power = 0.0
-            fr.power = 0.0
-            bl.power = 0.0
-            br.power = 0.0
-            stop()
-            resetDriveEncoders()
-        }catch(e: Exception) {
-            telemetry.addData("Error: ", e.message)
-            print(e.message)
-            telemetry.update()
+        val degree: Double = targetDegrees(degrees.toDouble())
+        fl.power = power
+        fr.power = -power
+        bl.power = power
+        br.power = -power
+        while (instance.opModeIsActive() && abs(fr.currentPosition) < degree) {
         }
+        fl.power = 0.0
+        fr.power = 0.0
+        bl.power = 0.0
+        br.power = 0.0
+        stop()
+        resetDriveEncoders()
     }
     fun strafe(Inches: Double, Power: Double){
-        try {
-            val distance = inchToTick(Inches)
+        val distance = inchToTick(Inches)
 
-            fl.power = Power
-            fr.power = -Power
-            br.power = Power
-            bl.power = -Power
+        fl.power = Power
+        fr.power = -Power
+        br.power = Power
+        bl.power = -Power
 
-            while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
-                telemetry.addData("Target Tics", distance)
-                telemetry.addData("FR", fr.currentPosition)
-                telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
-                telemetry.update()
-            }
-            fl.power = 0.0
-            fr.power = 0.0
-            bl.power = 0.0
-            br.power = 0.0
-            stop()
-            resetDriveEncoders()
-        } catch (e: Exception) {
-            telemetry.addData("Error: ", e.message)
-            print(e.message)
+        while (instance.opModeIsActive() && abs(fr.currentPosition) < distance){
+            telemetry.addData("Target Tics", distance)
+            telemetry.addData("FR", fr.currentPosition)
+            telemetry.addData("Loop Info", (instance.opModeIsActive() && abs(fr.currentPosition) < distance))
             telemetry.update()
         }
+        fl.power = 0.0
+        fr.power = 0.0
+        bl.power = 0.0
+        br.power = 0.0
+        stop()
+        resetDriveEncoders()
     }
 
     private fun cupArmInit() {
@@ -217,23 +241,28 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         extLift.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         extLift.mode = DcMotor.RunMode.RUN_USING_ENCODER
         extLift.power = 1.0
-        while (instance.opModeIsActive() && extLift.currentPosition < liftDistance(1.0)){}
+        while (instance.opModeIsActive() && abs(extLift.currentPosition) < liftDistance(1.0)){}
         extLift.power = 0.0
         extLift.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         extLift.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
     private suspend fun liftArmInit() {
         delay(50L)
-        gripY.position = 0.3
+        gripY.position = 0.5
     }
     fun extArmInit() {
-        extArm.power = 0.9
+        extArm.power = 0.5
+        while (instance.opModeIsActive() && xAxis.state) {}
+        extArm.power = 0.0
+        extArm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        extArm.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        extArm.power = 0.3
         while (instance.opModeIsActive() && !xAxis.state) {}
         extArm.power = 0.0
     }
 
-    fun checkTarget(vuforia: Cam) {
-        var bitSave : Bitmap
+    suspend fun checkTarget(vuforia: Cam) {
+
         while (instance.opModeInInit()) {
             if(vuforia.rgb != null) {
                 val bmp: Bitmap = Bitmap.createBitmap(vuforia.rgb.width,vuforia.rgb.height, Bitmap.Config.RGB_565)
@@ -242,10 +271,8 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
                 seeSignal(bitSave, vuforia)
                 telemetry.addData("Current Parking Zone:", parkingZone)
                 telemetry.update()
-                if (!instance.opModeInInit()) {
-                    vuforia.saveBitmap(instance, bitSave)
-                }
             }
+            delay(500)
         }
     }
     fun cupArmMove(direction: Direction) {
@@ -277,16 +304,18 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         when (direction) {
             Direction.UP -> {
                 extLift.power = 0.9
-                while (instance.opModeIsActive() && extLift.currentPosition < liftDistance(20.0)) {
+                while (instance.opModeIsActive() && abs(extLift.currentPosition) < liftDistance(21.5)) {
                     telemetry.addData("Lift Position", extLift.currentPosition)
+                    telemetry.addData("Lift Target", liftDistance(15.0))
                     telemetry.update()
                 }
                 extLift.power = 0.0
             }
             Direction.DOWN -> {
                 extLift.power = -0.9
-                while (instance.opModeIsActive() && extLift.currentPosition > liftDistance(1.0)) {
+                while (instance.opModeIsActive() && abs(extLift.currentPosition) > liftDistance(1.5)) {
                     telemetry.addData("Lift Position", extLift.currentPosition)
+                    telemetry.addData("Lift Target", liftDistance(1.0))
                     telemetry.update()
                 }
                 extLift.power = 0.0
@@ -341,7 +370,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
                 gripY.position = 0.0
             }
             Direction.MIDDLE -> {
-                gripY.position = 0.7
+                gripY.position = 0.5
             }
             else -> {
                 return
@@ -386,15 +415,15 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         return degree * (288.0/360.0)
     }
     private fun liftDistance(inch: Double) : Double{
-        return inch * 118
+        return inch * (1.5*118.0/2.4)
     }
     private fun extArm(inch: Double): Double {
         return inch * ((1.5 * pi)*2)
     }
-    fun seeSignal(bitSave: Bitmap, vuforia: Cam): Int {
-        val left = 300 // pixels from left of image to left edge of ring stack (max)
-        val top = 280 // pixels from top of image to top of a 4 ring stack
-        val right = left + 150 // pixels from left of image to right edge of ring stack
+    private fun seeSignal(bitSave: Bitmap, vuforia: Cam) {
+        val left = 170 // pixels from left of image to left edge of ring stack (max)
+        val top = 350 // pixels from top of image to top of a 4 ring stack
+        val right = left + 300 // pixels from left of image to right edge of ring stack
         val bottom = top + 50 // pixels from top of image to bottom of ring stackstack
 
         val paint = Paint()
@@ -402,7 +431,7 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
         canvas = Canvas(bitSave)
         val s = String.format("Zone: %d", parkingZone)
         canvas!!.drawText(s, left.toFloat(),  bottom.toFloat(), paint)
-        return parkingZone
+
     }
 
     // checkPixel tests to see if the pixel is orange.
@@ -488,6 +517,30 @@ class AutoInstance(Instance:LinearOpMode, hardware: HardwareMap, t: Telemetry) {
             prev = cur
         }
         return maxLen
+    }
+
+
+
+    fun scoreStack() {
+        cycle.robotState = AutoScoreCycle.RobotState.HANDOVER
+        cycle.gripX = AutoScoreCycle.GripXState.OPEN
+        cycle.ext = AutoScoreCycle.ExtState.IN
+        cycle.cupArm = AutoScoreCycle.CupArmState.UP
+        cycle.lift = AutoScoreCycle.LiftState.BOTTOM
+        cycle.gripY = AutoScoreCycle.GripYState.RECEIVE
+        while (instance.opModeIsActive() && cycle.robotState != AutoScoreCycle.RobotState.DONE) {
+            cycle.scoreCones()
+            telemetry.addData("STATE", cycle.robotState.name)
+            telemetry.addData("CupArm", cupArm.currentPosition)
+            telemetry.addData("GripX", cycle.gripX.name)
+            telemetry.addData("GripX Cond", cycle.gripXTime < System.currentTimeMillis())
+            telemetry.addData("GripY", cycle.gripY.name)
+            telemetry.addData("Extendo", cycle.ext.name)
+            telemetry.addData("Lift", cycle.lift.name)
+            telemetry.addData("Lift pos", extLift.currentPosition)
+            telemetry.update()
+        }
+        cycle.done()
     }
 }
 

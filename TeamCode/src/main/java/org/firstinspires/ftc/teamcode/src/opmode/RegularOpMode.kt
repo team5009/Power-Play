@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.firstinspires.ftc.teamcode.src.models.abot.ScoreCycle
 import org.firstinspires.ftc.teamcode.src.models.abot.TeleInstance
 
 @TeleOp(name = "Regular TeleOp", group = "TeleOp Production")
@@ -14,6 +13,7 @@ class RegularOpMode: LinearOpMode() {
         telemetry.addData(">", "Ready")
         telemetry.update()
         waitForStart()
+
         GlobalScope.launch {
             while (opModeIsActive()) {
                 bot.gamePadOne()
@@ -26,7 +26,6 @@ class RegularOpMode: LinearOpMode() {
         }
         while(opModeIsActive()){
             telemetry.addData(">", "Running")
-            telemetry.addData("Robot State", bot.cycle.robotState.name)
             telemetry.addData("Wheel Encoder", bot.fl.currentPosition)
             telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition)
             telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition <= -1000)

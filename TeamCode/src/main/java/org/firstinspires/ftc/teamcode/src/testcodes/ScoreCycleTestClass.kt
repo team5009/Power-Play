@@ -48,12 +48,12 @@ class ScoreCycleTestClass(opMode: LinearOpMode, robot: TeleInstance) {
 
 
     fun unit_test(){
-        robotState = RobotState.RETRACTING
-        gripY = GripYState.RECEIVE
-        lift = LiftState.BOTTOM
-        ext = ExtState.IN
-        cupArm = CupArmState.UP
-        gripX = GripXState.CLOSED
+        robotState = RobotState.DUMPING
+        gripY = GripYState.DUMP
+        lift = LiftState.TOP
+        ext = ExtState.READY
+        cupArm = CupArmState.DOWN
+        gripX = GripXState.OPEN
         while(op.opModeIsActive()) {
             when(robotState) {
                 RobotState.RETRACTING -> retracting()
