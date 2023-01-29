@@ -18,7 +18,6 @@ plugins {
 }
 
 
-
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
 

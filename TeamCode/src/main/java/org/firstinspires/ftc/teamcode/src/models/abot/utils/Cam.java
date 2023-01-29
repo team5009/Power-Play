@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.src.models.abot;
+package org.firstinspires.ftc.teamcode.src.models.abot.utils;
 
 import android.graphics.Bitmap;
 
@@ -21,36 +21,8 @@ import java.util.Locale;
 
 public class Cam extends VuforiaLocalizerImpl {
 
-    public Image rgb;
     private final File captureDirectory = AppUtil.ROBOT_DATA_DIR;
-
-    static class ClosableFrame extends Frame {
-        public ClosableFrame(Frame other){
-            super(other);
-        }
-        public void close() {
-            super.delete();
-        }
-    }
-
-
-    public class VuTestSubclass extends VuforiaLocalizerImpl.VuforiaCallback {
-        @Override public synchronized void Vuforia_onUpdate(State state){
-            super.Vuforia_onUpdate(state);
-
-            ClosableFrame frame = new ClosableFrame(state.getFrame());
-
-            long num = frame.getNumImages();
-            for (int i = 0; i< num; i++) {
-                if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
-                    rgb = frame.getImage(i);
-                    break;
-                }
-            }
-
-            frame.close();
-        }
-    }
+    public Image rgb;
 
     public Cam(VuforiaLocalizer.Parameters parameters) {
         super(parameters);
@@ -63,7 +35,6 @@ public class Cam extends VuforiaLocalizerImpl {
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
 
     }
-
 
     public void clearGlSurface() {
         if (this.glSurfaceParent != null) {
@@ -89,8 +60,8 @@ public class Cam extends VuforiaLocalizerImpl {
         //error(String.format("%d %d %d %d", a, r, g, b));
         // error(String.format("%d %d %d", color.red(), color.green(), color.blue()));
         File file = new File(captureDirectory, String.format(Locale.getDefault(), "webcam-frame.jpg"));
-        op.telemetry.addData("Status1:","attempt to get %s", file.getName());
-        op.telemetry.addData("Status1:","attempt to get %s", file.getPath());
+        op.telemetry.addData("Status1:", "attempt to get %s", file.getName());
+        op.telemetry.addData("Status1:", "attempt to get %s", file.getPath());
 
 
         try {
@@ -106,6 +77,16 @@ public class Cam extends VuforiaLocalizerImpl {
         op.telemetry.update();
     }
 
+    static class ClosableFrame extends Frame {
+        public ClosableFrame(Frame other) {
+            super(other);
+        }
+
+        public void close() {
+            super.delete();
+        }
+    }
+
     static class RGB {
         public int r;
         public int g;
@@ -118,8 +99,13 @@ public class Cam extends VuforiaLocalizerImpl {
         }
 
         private static int clamp(int value, int low, int high) {
-            if (value < low) { return low; };
-            if (value > high) { return high; }
+            if (value < low) {
+                return low;
+            }
+            ;
+            if (value > high) {
+                return high;
+            }
             return value;
         }
 
@@ -134,5 +120,24 @@ public class Cam extends VuforiaLocalizerImpl {
             );
         }
 
+    }
+
+    public class VuTestSubclass extends VuforiaLocalizerImpl.VuforiaCallback {
+        @Override
+        public synchronized void Vuforia_onUpdate(State state) {
+            super.Vuforia_onUpdate(state);
+
+            ClosableFrame frame = new ClosableFrame(state.getFrame());
+
+            long num = frame.getNumImages();
+            for (int i = 0; i < num; i++) {
+                if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
+                    rgb = frame.getImage(i);
+                    break;
+                }
+            }
+
+            frame.close();
+        }
     }
 }

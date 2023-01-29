@@ -1,25 +1,28 @@
 package org.firstinspires.ftc.teamcode.src.testcodes
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import org.firstinspires.ftc.teamcode.src.models.abot.AutoInstance
-import org.firstinspires.ftc.teamcode.src.models.abot.AutoScoreCycle
+import org.firstinspires.ftc.teamcode.src.models.abot.cycles.AutoCycle
+import org.firstinspires.ftc.teamcode.src.models.abot.instances.autonomous.AutoInstance
 
-@TeleOp(name = "Scoring Test", group = "TeleOp Test")
+@Autonomous(name = "Scoring Test", group = "Auto Test")
 class ScoringTest : LinearOpMode() {
     override fun runOpMode() {
         val bot = AutoInstance(this, hardwareMap, telemetry)
-        val scoringCycle = AutoScoreCycle(this, bot)
+        val scoringCycle = AutoCycle(this, bot)
+        val target = 2
+
+        telemetry.addData("Lift pos", bot.extLift.currentPosition)
+        telemetry.addData("CupArm pos", bot.cupArm.currentPosition)
+        telemetry.addData("Extendo pos", bot.extArm.currentPosition)
+        telemetry.update()
 
         waitForStart()
 
-        if(opModeIsActive()) {
-            bot.init()
-            sleep(5000)
-            bot.extArmInit()
-            bot.cupArmMove(AutoInstance.Direction.UP)
-            sleep(100)
-            bot.scoreStack()
+        if (opModeIsActive()) {
+            scoringCycle.extArm(AutoCycle.Directions.READY)
+            sleep(500)
+            scoringCycle.runApp(target)
         }
     }
 }

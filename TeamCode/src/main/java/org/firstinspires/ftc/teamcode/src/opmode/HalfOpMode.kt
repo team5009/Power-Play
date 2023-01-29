@@ -4,12 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.firstinspires.ftc.teamcode.src.models.abot.instances.teleop.TeleInstance
+import org.firstinspires.ftc.teamcode.src.models.abot.instances.teleop.HalfTeleInstance
 
-@TeleOp(name = "Regular TeleOp", group = "TeleOp Production")
-class RegularOpMode : LinearOpMode() {
+@TeleOp(name = "Half TeleOp", group = "TeleOp Production")
+class HalfOpMode : LinearOpMode() {
     override fun runOpMode() {
-        val bot = TeleInstance(this, hardwareMap)
+        val bot = HalfTeleInstance(this, hardwareMap)
         telemetry.addData(">", "Ready")
         telemetry.update()
         waitForStart()
@@ -24,6 +24,7 @@ class RegularOpMode : LinearOpMode() {
             }
         }
         while (opModeIsActive()) {
+            sleep(1)
         }
 
     }
