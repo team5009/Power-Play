@@ -3,11 +3,11 @@ package org.firstinspires.ftc.teamcode.src.autonomous
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer
-import org.firstinspires.ftc.teamcode.src.models.abot.cycles.AutoCycle
+import org.firstinspires.ftc.teamcode.src.models.abot.cycles.autonomous.AutoCycle
 import org.firstinspires.ftc.teamcode.src.models.abot.instances.autonomous.AutoInstance
 import org.firstinspires.ftc.teamcode.src.models.abot.utils.Cam
 
-@Autonomous(name = "Perfect Right", group = "Production Autonomous")
+@Autonomous(name = "Perfect Left", group = "Production Autonomous")
 class PerfectLeft : LinearOpMode() {
     override fun runOpMode() {
         val bot = AutoInstance(this, hardwareMap, telemetry)
@@ -39,59 +39,57 @@ class PerfectLeft : LinearOpMode() {
             cycle.extArmState = AutoCycle.ExtArmState.IN
             bot.resetJob(vuforia)
             bot.resetDriveEncoders()
+            bot.resetEncoders()
+
+
             sleep(100)
             bot.init()
-            bot.move(70.0, -pow, true, true)
+            bot.move(62.0, -pow, true)
+//            sleep(100)
+//            bot.move(8.0, pow, true)
             sleep(100)
-            bot.move(10.0, pow, true)
-            sleep(100)
-            bot.pivot(57, pow)
-            sleep(100)
-            bot.strafe(2.75, pow)
+            bot.pivot(70, -pow)
             sleep(50)
-//            bot.move(1.5, -pow, true)
-//            sleep(50)
+            bot.move(1.0, pow, true)
+            bot.resetSliderEncoders()
+            sleep(50)
             cycle.extArm(AutoCycle.Directions.READY)
             sleep(100)
             cycle.runApp(target)
 
-
             when (target) {
                 1 -> {
-//                    bot.strafe(5.0, -0.9)
-                    bot.pivot(50, -pow)
-                    sleep(100)
-                    bot.move(5.0, pow, true)
-                    sleep(100)
-                    bot.pivot(60, -pow)
-                    sleep(100)
-                    bot.move(24.0, pow, true)
-                    sleep(100)
-                    bot.pivot(60, pow)
-                    sleep(100)
-                    bot.move(5.0, pow, true)
-                }
-                2 -> {
-                    bot.pivot(45, -pow)
-                    sleep(100)
-                    bot.move(10.0, pow, true)
-                }
-                3 -> {
-                    bot.pivot(10, -pow)
+                    bot.liftHand(AutoInstance.Direction.MIDDLE)
+                    cycle.extArm(AutoCycle.Directions.DONE)
+                    sleep(50)
+                    bot.pivot(20, pow)
                     sleep(50)
                     bot.move(27.0, pow, true)
                     sleep(50)
-                    bot.pivot(35, -pow)
+                    bot.pivot(50, pow)
                     sleep(50)
                     bot.move(7.5, pow, true)
-//                    bot.strafe(1.0, 0.9)
-//                    bot.move(27.0, pow, true)
-//                    bot.pivot(45, -pow)
-//                    sleep(100)
+                }
+
+                2 -> {
+                    bot.pivot(75, pow)
+                    sleep(100)
+                    bot.move(10.0, pow, true)
+                }
+
+                3 -> {
+                    bot.liftHand(AutoInstance.Direction.MIDDLE)
+                    cycle.extArm(AutoCycle.Directions.DONE)
+                    sleep(45)
+                    bot.pivot(135, pow)
+                    sleep(100)
+                    bot.move(27.0, pow, true)
+                    sleep(100)
+                    bot.pivot(50, -pow)
+                    sleep(100)
+                    bot.move(5.0, pow, true)
                 }
             }
-            sleep(100)
-            bot.liftHand(AutoInstance.Direction.CLOSE)
         }
     }
 }

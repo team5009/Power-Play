@@ -102,7 +102,6 @@ public class Cam extends VuforiaLocalizerImpl {
             if (value < low) {
                 return low;
             }
-            ;
             if (value > high) {
                 return high;
             }

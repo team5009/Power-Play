@@ -12,6 +12,7 @@ class RegularOpMode : LinearOpMode() {
         val bot = TeleInstance(this, hardwareMap)
         telemetry.addData(">", "Ready")
         telemetry.update()
+        bot.resetEncoders()
         waitForStart()
         GlobalScope.launch {
             while (opModeIsActive()) {
@@ -23,8 +24,7 @@ class RegularOpMode : LinearOpMode() {
                 bot.gamePadTwo()
             }
         }
-        while (opModeIsActive()) {
-        }
+        while (opModeIsActive()) { }
 
     }
 }

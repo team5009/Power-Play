@@ -12,13 +12,13 @@ class AntlerTest : LinearOpMode() {
         waitForStart()
         if (opModeIsActive()) {
             var i = 1.0
-            bot.gripZ.position = i
+            bot.bot.zGrip.position = i
             sleep(1000)
 
             while (i > 0.0) {
-                bot.gripZ.position = i
+                bot.bot.zGrip.position = i
                 sleep(1000)
-                telemetry.addData("Antler Pos", bot.gripZ.position)
+                telemetry.addData("Antler Pos", bot.bot.zGrip.position)
                 telemetry.update()
                 i -= 0.05
             }

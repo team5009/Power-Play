@@ -9,38 +9,40 @@ import org.firstinspires.ftc.teamcode.src.models.abot.instances.teleop.TeleInsta
 @TeleOp(name = "Test TeleOp", group = "TeleOp Test")
 class TestOpMode : LinearOpMode() {
     override fun runOpMode() {
-        val bot = TeleInstance(this, hardwareMap)
+        val instance = TeleInstance(this, hardwareMap)
         telemetry.addData(">", "Ready")
         telemetry.update()
+        instance.resetEncoders()
+
         waitForStart()
 
         GlobalScope.launch {
             while (opModeIsActive()) {
-                bot.gamePadOne()
+                instance.gamePadOne()
             }
         }
         GlobalScope.launch {
             while (opModeIsActive()) {
-                bot.gamePadTwo()
+                instance.gamePadTwo()
             }
         }
         while (opModeIsActive()) {
             telemetry.addData(">", "Running")
-            telemetry.addData("Wheel Encoder", bot.fl.currentPosition)
-            telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition)
-            telemetry.addData("ExtArm Encoder", bot.extArm.currentPosition <= -1000)
-            telemetry.addData("ExtLift Encoder", bot.extLift.currentPosition)
-            telemetry.addData("CupArm Power", bot.cupArm.power)
-            telemetry.addData("Lift Power", bot.extLift.power)
-            telemetry.addData("Arm Power", bot.extArm.power)
-            telemetry.addData("CupArm Angle", bot.cupArm.currentPosition * bot.ticksPerDegree)
-            telemetry.addData("GripX Servo Pos", bot.gripX.position)
-            telemetry.addData("GripY Servo Pos", bot.gripY.position)
-            telemetry.addData("GripZ Servo Pos", bot.gripZ.position)
-            telemetry.addData("xAxis Sensor", bot.xAxis.state)
-            telemetry.addData("yAxis Sensor", bot.yAxis.state)
+            telemetry.addData("Wheel Encoder", instance.bot.fl.currentPosition)
+            telemetry.addData("ExtArm Encoder", instance.bot.xSlider.currentPosition)
+            telemetry.addData("ExtArm Encoder", instance.bot.xSlider.currentPosition <= -1000)
+            telemetry.addData("ExtLift Encoder", instance.bot.ySlider.currentPosition)
+            telemetry.addData("CupArm Power", instance.bot.arm.power)
+            telemetry.addData("Lift Power", instance.bot.ySlider.power)
+            telemetry.addData("Arm Power", instance.bot.xSlider.power)
+            telemetry.addData("CupArm Angle", instance.bot.arm.currentPosition * instance.ticksPerDegree)
+            telemetry.addData("GripX Servo Pos", instance.bot.xGrip.position)
+            telemetry.addData("GripY Servo Pos", instance.bot.yGrip.position)
+            telemetry.addData("GripZ Servo Pos", instance.bot.zGrip.position)
+            telemetry.addData("xAxis Sensor", instance.bot.xSensor.state)
+            telemetry.addData("yAxis Sensor", instance.bot.ySensor.state)
             telemetry.addData("", "")
-            telemetry.addData("yAxis Sensor", bot.process)
+            telemetry.addData("yAxis Sensor", instance.process)
             telemetry.update()
         }
     }
