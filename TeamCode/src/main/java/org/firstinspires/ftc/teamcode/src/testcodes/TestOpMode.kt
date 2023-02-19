@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.src.models.abot.instances.teleop.TeleInsta
 @TeleOp(name = "Test TeleOp", group = "TeleOp Test")
 class TestOpMode : LinearOpMode() {
     override fun runOpMode() {
-        val instance = TeleInstance(this, hardwareMap)
+        val instance = TeleInstance(this)
         telemetry.addData(">", "Ready")
         telemetry.update()
         instance.resetEncoders()

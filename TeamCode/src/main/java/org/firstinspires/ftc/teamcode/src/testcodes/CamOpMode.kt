@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.src.models.abot.utils.Cam
 @Autonomous(name = "Cam Test", group = "TeleOp Test")
 class CamOpMode : LinearOpMode() {
     override fun runOpMode() {
-        val bot = AutoInstance(this, hardwareMap, telemetry)
+        val bot = AutoInstance(this, telemetry)
         val cameraMonitorViewId = hardwareMap.appContext.resources.getIdentifier(
             "cameraMonitorViewId",
             "id",
@@ -18,7 +18,7 @@ class CamOpMode : LinearOpMode() {
         val params = VuforiaLocalizer.Parameters(cameraMonitorViewId)
         params.vuforiaLicenseKey = bot.vuforiaKey
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
-        params.cameraName = bot.frontCam
+        params.cameraName = bot.bot.frontCam
         val vuforia =
             Cam(params)
 

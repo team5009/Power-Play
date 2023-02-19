@@ -1,33 +1,39 @@
 package org.firstinspires.ftc.teamcode.src.models.abot.instances
 
 import com.qualcomm.hardware.bosch.BNO055IMU
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
+
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import org.firstinspires.ftc.teamcode.src.models.abot.utils.TouchSensor
 
 val touchSensor = TouchSensor()
-class RobotClass(Instance: LinearOpMode, Hardware: HardwareMap) {
-    val fl: DcMotorEx = Hardware.get(DcMotorEx::class.java, "FL")
-    val fr: DcMotorEx = Hardware.get(DcMotorEx::class.java, "FR")
-    val br: DcMotorEx = Hardware.get(DcMotorEx::class.java, "BR")
-    val bl: DcMotorEx = Hardware.get(DcMotorEx::class.java, "BL")
-    val xSlider: DcMotorEx = Hardware.get(DcMotorEx::class.java, "Extendo")
-    val ySlider: DcMotorEx = Hardware.get(DcMotorEx::class.java, "Elevato")
-    val arm: DcMotorEx = Hardware.get(DcMotorEx::class.java, "cupArm")
-    val xGrip: Servo = Hardware.get(Servo::class.java, "grip")
-    val yGrip: Servo = Hardware.get(Servo::class.java, "dropper")
-    val zGrip: Servo = Hardware.get(Servo::class.java, "antler")
-    val xSensor: DigitalChannel = touchSensor.get("xAxis", Hardware)
-    val ySensor: DigitalChannel = touchSensor.get("yAxis", Hardware)
-    val imu: BNO055IMU = Hardware.get(BNO055IMU::class.java, "imu")
+class RobotClass(Instance: LinearOpMode) {
+    val fl: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "FL")
+    val fr: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "FR")
+    val br: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "BR")
+    val bl: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "BL")
+    val xSlider: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "Extendo")
+    val ySlider: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "Elevato")
+    val arm: DcMotorEx = Instance.hardwareMap.get(DcMotorEx::class.java, "cupArm")
+    val xGrip: Servo = Instance.hardwareMap.get(Servo::class.java, "grip")
+    val yGrip: Servo = Instance.hardwareMap.get(Servo::class.java, "dropper")
+    val zGrip: Servo = Instance.hardwareMap.get(Servo::class.java, "antler")
+    val xSensor: DigitalChannel = touchSensor.get("xAxis", Instance.hardwareMap)
+    val ySensor: DigitalChannel = touchSensor.get("yAxis", Instance.hardwareMap)
+    val frontCam: CameraName = Instance.hardwareMap.get("FrontCam") as WebcamName
+    val imu: BNO055IMU = Instance.hardwareMap.get(BNO055IMU::class.java, "imu")
 
     init {
         // Set Each Wheel Direction
-        fl.direction = DcMotorSimple.Direction.FORWARD
-        fr.direction = DcMotorSimple.Direction.REVERSE
-        bl.direction = DcMotorSimple.Direction.FORWARD
-        br.direction = DcMotorSimple.Direction.REVERSE
+        fl.direction = DcMotorSimple.Direction.REVERSE
+        fr.direction = DcMotorSimple.Direction.FORWARD
+        bl.direction = DcMotorSimple.Direction.REVERSE
+        br.direction = DcMotorSimple.Direction.FORWARD
 
         fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         fl.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -54,10 +60,13 @@ class RobotClass(Instance: LinearOpMode, Hardware: HardwareMap) {
         xSlider.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
 
-
         // define initialization values for IMU, and then initialize it.
         val params = BNO055IMU.Parameters()
         params.angleUnit = BNO055IMU.AngleUnit.DEGREES
+        params.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC
+        params.loggingEnabled = true
+        params.loggingTag = "IMU"
+        params.accelerationIntegrationAlgorithm = JustLoggingAccelerationIntegrator()
         imu.initialize(params)
     }
 }

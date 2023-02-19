@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.src.models.abot.instances.autonomous.AutoI
 @Autonomous(name = "Antler Test Autonomous", group = "Test Autonomous")
 class AntlerTest : LinearOpMode() {
     override fun runOpMode() {
-        val bot = AutoInstance(this, hardwareMap, telemetry)
+        val bot = AutoInstance(this, telemetry)
 
         waitForStart()
         if (opModeIsActive()) {
