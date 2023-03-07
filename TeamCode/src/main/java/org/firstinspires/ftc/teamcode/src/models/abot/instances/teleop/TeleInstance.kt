@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.src.models.abot.instances.teleop
 //import kotlinx.coroutines.DefaultExecutor.delay
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
+import org.firstinspires.ftc.teamcode.src.models.abot.cycles.teleop.GrabStore
 import org.firstinspires.ftc.teamcode.src.models.abot.cycles.teleop.TeleCycle
 import org.firstinspires.ftc.teamcode.src.models.abot.instances.RobotClass
 import org.firstinspires.ftc.teamcode.src.models.abot.utils.*
@@ -16,9 +17,10 @@ class TeleInstance(Instance: LinearOpMode) {
 
     enum class Positions {OPEN, CLOSE, RECEIVED, DUMPED}
 
-    var ticksPerDegree = 288.0 / 360.0
+    var ticksPerDegree = 1120.0 / 360.0
     private val instance = Instance
     val myCycle = TeleCycle(instance, this)
+    val grabCycle = GrabStore(instance, this)
     var freeMove = false
 
     private val xSliderConst = X_Slider()
@@ -29,14 +31,18 @@ class TeleInstance(Instance: LinearOpMode) {
     private val zGripConst = Z_Grip()
 
     private var cupHandPos: Positions = Positions.OPEN
-    private var liftGripPos: Positions = Positions.RECEIVED
+    private var liftGripPos: Positions = Positions.DUMPED
 
     var process = false
-    private var yPressed = false
+    var grabProcess = false
+
     private var isInit = true
+
+    private var yPressed = false
     private var freeMovePress = false
     private var cupHandPress = false
     private var liftGripPress = false
+    private var grabPress = false
 
     enum class Direction {
         FORWARD, BACKWARD, UP, DOWN
@@ -44,8 +50,9 @@ class TeleInstance(Instance: LinearOpMode) {
 
     init {
         bot.zGrip.position = zGripConst.L1
-        bot.yGrip.position = 0.45
-        bot.xGrip.position = 0.0
+        bot.yGrip.position = yGripConst.receive
+        bot.xGrip.position = xGripConst.open
+        bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
         // Behaviour when Motor Power = 0
 //        fl.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -78,7 +85,7 @@ class TeleInstance(Instance: LinearOpMode) {
     }
 
     fun gamePadOne(gamePad: Gamepad = instance.gamepad1) {
-        moveControls(gamePad)
+        moveControlsV2(gamePad)
 //        moveControlsCar(gamePad)
         cupHand(gamePad)
         cupArmMove(gamePad)
@@ -89,8 +96,9 @@ class TeleInstance(Instance: LinearOpMode) {
         liftMove(gamePad)
         liftHand(gamePad)
         armMove(gamePad)
-        cycleInit(gamePad)
+//        cycleInit(gamePad)
         cycle(gamePad)
+        grabCycle(gamePad)
     }
 
     fun extArmInit() {
@@ -123,17 +131,19 @@ class TeleInstance(Instance: LinearOpMode) {
         when (direction) {
             Direction.FORWARD -> {
                 if (abs(bot.arm.currentPosition) <= (30 * ticksPerDegree) && !freeMove) {
-                    bot.arm.power = 0.0
                     bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+                    bot.arm.power = 0.0
                 } else {
+                    bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                     bot.arm.power = -power
                 }
             }
             Direction.BACKWARD -> {
                 if (abs(bot.arm.currentPosition) >= (85 * ticksPerDegree) && !freeMove) {
-                    bot.arm.power = 0.0
                     bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+                    bot.arm.power = 0.0
                 } else {
+                    bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                     bot.arm.power = power
                 }
             }
@@ -301,49 +311,49 @@ class TeleInstance(Instance: LinearOpMode) {
         val rightX = gp.right_stick_x.toDouble()
         val deadZone = 0.2
         val threshHold = 0.15
-        val pow = 0.7
+        val pow = 0.8
 
         val denominator = max(abs(leftY) + abs(leftX) + abs(rightX), 1.0)
 
         setMotorPower(
-            (leftY + leftX + rightX) / denominator,
-            (leftY - leftX - rightX) / denominator,
-            (leftY - leftX + rightX) / denominator,
-            (leftY + leftX - rightX) / denominator
+            ((leftY + rightX + leftX ) / denominator) * pow,
+            ((leftY - rightX - leftX ) / denominator) * pow,
+            ((leftY - rightX + leftX) / denominator) * pow,
+            ((leftY + rightX - leftX) / denominator) * pow
         )
 
     }
 
-    private fun cupArmMove(gamePad: Gamepad) {
-        if (gamePad.x && !process) {
-            cupArm(Direction.BACKWARD, 0.9)
-        } else if (gamePad.b && !process) {
-            cupArm(Direction.FORWARD, 0.9)
-        } else if (!process) {
+    private fun cupArmMove(gp: Gamepad) {
+        if (gp.x && !process && !gp.share && !grabProcess) {
+            cupArm(Direction.BACKWARD, 0.6)
+        } else if (gp.b && !process && !gp.share && !grabProcess) {
+            cupArm(Direction.FORWARD, 0.6)
+        } else if (!process && !gp.share && !grabProcess) {
             cupArm(Direction.FORWARD, 0.0)
         }
     }
 
-    private fun armMove(gamePad: Gamepad) {
-        if (gamePad.dpad_right) {
+    private fun armMove(gp: Gamepad) {
+        if (gp.dpad_right) {
             arm(Direction.BACKWARD, 0.5)
-        } else if (gamePad.dpad_left) {
+        } else if (gp.dpad_left) {
             arm(Direction.FORWARD, 0.5)
         } else {
             arm(Direction.FORWARD, 0.0)
         }
     }
 
-    private fun cupHand(gamePad: Gamepad) {
-        if (gamePad.a && !cupHandPress && cupHandPos == Positions.CLOSE) {
+    private fun cupHand(gp: Gamepad) {
+        if (gp.a && !cupHandPress && cupHandPos == Positions.CLOSE) {
             cupHandPress = true
-            bot.xGrip.position = 0.3
+            bot.xGrip.position = xGripConst.open
             cupHandPos = Positions.OPEN
-        } else if (gamePad.a && !cupHandPress && cupHandPos == Positions.OPEN) {
+        } else if (gp.a && !cupHandPress && cupHandPos == Positions.OPEN) {
             cupHandPress = true
-            bot.xGrip.position = 1.0
+            bot.xGrip.position = xGripConst.close
             cupHandPos = Positions.CLOSE
-        } else if (!gamePad.a && cupHandPress) {
+        } else if (!gp.a && cupHandPress) {
             cupHandPress = false
         }
 //        if (gamePad.a) {
@@ -352,18 +362,16 @@ class TeleInstance(Instance: LinearOpMode) {
 //        }
     }
 
-    private fun liftMove(gamePad: Gamepad) {
-        if (gamePad.right_trigger > 0.1 && !freeMove) {
-            if (gamePad.a) {
-                lift(Direction.UP, 0.9)
-            } else if (gamePad.x) {
-                if (abs(bot.ySlider.currentPosition) < liftDistance(16.0)) {
+    private fun liftMove(gp: Gamepad) {
+        if (gp.right_trigger > 0.1 && !freeMove) {
+            if (gp.y) {
+                if (abs(bot.ySlider.currentPosition) < ySliderConst.top)  {
                     lift(Direction.UP, 0.9)
                 } else {
                     lift(Direction.UP, 0.0)
                 }
-            } else if (gamePad.y) {
-                if (abs(bot.ySlider.currentPosition) < liftDistance(4.5)) {
+            } else if (gp.x) {
+                if (abs(bot.ySlider.currentPosition) < ySliderConst.middle) {
                     lift(Direction.UP, 0.9)
                 } else {
                     lift(Direction.UP, 0.0)
@@ -371,25 +379,25 @@ class TeleInstance(Instance: LinearOpMode) {
             } else {
                 lift(Direction.DOWN, 0.9)
             }
-        } else if (gamePad.dpad_up && freeMove) {
+        } else if (gp.dpad_up && freeMove) {
             lift(Direction.UP, 0.9)
-        } else if (gamePad.dpad_down && freeMove) {
+        } else if (gp.dpad_down && freeMove) {
             lift(Direction.DOWN, 0.9)
         } else {
             lift(Direction.UP, 0.0)
         }
     }
 
-    private fun liftHand(gamePad: Gamepad) {
-        if (gamePad.left_bumper && !liftGripPress && liftGripPos == Positions.RECEIVED) {
+    private fun liftHand(gp: Gamepad) {
+        if (gp.left_bumper && !liftGripPress && liftGripPos == Positions.RECEIVED) {
             liftGripPress = true
             bot.yGrip.position = 1.0
             liftGripPos = Positions.DUMPED
-        } else if (gamePad.left_bumper && !liftGripPress && liftGripPos == Positions.DUMPED) {
+        } else if (gp.left_bumper && !liftGripPress && liftGripPos == Positions.DUMPED) {
             liftGripPress = true
             bot.yGrip.position = 0.0
             liftGripPos = Positions.RECEIVED
-        } else if (!gamePad.left_bumper && liftGripPress) {
+        } else if (!gp.left_bumper && liftGripPress) {
             liftGripPress = false
         }
 
@@ -410,35 +418,37 @@ class TeleInstance(Instance: LinearOpMode) {
         }
     }
 
-    private fun cycleInit(gamePad: Gamepad) {
-        if (gamePad.start && gamePad.x) {
+    private fun cycleInit(gp: Gamepad) {
+        if (gp.start && gp.x) {
 //            cycle.init()
             myCycle.runInit()
             isInit = true
         }
     }
 
-    private fun cycle(gamePad: Gamepad) {
+    private fun cycle(gp: Gamepad) {
         var processPressed = false
-        if (gamePad.start && gamePad.y && !yPressed && !process && isInit) {
+        if (gp.start && gp.y && !yPressed && !process) {
             yPressed = true
             isInit = true //false
             process = true
+            bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
             myCycle.runInit()
             while (process && instance.opModeIsActive()) {
-                if (!gamePad.y && yPressed) {
+                if (!gp.y && yPressed) {
                     yPressed = false
-                } else if (gamePad.y && !yPressed && process) {
+                } else if (gp.y && !yPressed && process) {
                     process = false
                     yPressed = true
                     myCycle.robotState = RobotState.DONE
+                    bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                 }
-                if (gamePad.dpad_down) {
+                if (gp.dpad_down) {
 //                    cycle.EXT_ARM_MIN = 50.0
 //                    cycle.EXT_ARM_READY = cycle.EXT_ARM_MIN
 //                    cycle.EXT_ARM_MAX = cycle.EXT_ARM_MIN
                     myCycle.coneDistance = false
-                } else if (gamePad.dpad_up) {
+                } else if (gp.dpad_up) {
 //                    cycle.EXT_ARM_MIN = 150.0
 //                    cycle.EXT_ARM_READY = 118.0 / 3.0 * 6
 //                    cycle.EXT_ARM_MAX = 118.0 / 3.0 * 14
@@ -447,8 +457,34 @@ class TeleInstance(Instance: LinearOpMode) {
 //                cycle.scoreCones()
                 myCycle.run()
             }
-        } else if (!gamePad.y && yPressed) {
+        } else if (!gp.y && yPressed) {
             yPressed = false
+        }
+    }
+    private fun grabCycle(gp: Gamepad) {
+        if (gp.b && !grabPress && !process && !grabProcess && !gp.start) {
+            grabPress = true
+            grabProcess = true
+            bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+            grabCycle.runInit()
+            while (grabProcess && instance.opModeIsActive()) {
+                if (!gp.b && grabPress) {
+                    grabPress = false
+                } else if (gp.b && !grabPress && grabProcess) {
+                    grabProcess = false
+                    grabPress = true
+                    grabCycle.robotState = RobotState.DONE
+                    bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+
+                }
+                if (grabCycle.robotState == RobotState.DONE) {
+                    grabProcess = false
+                    bot.arm.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+                }
+                grabCycle.run()
+            }
+        } else if (!gp.b && grabPress && !gp.start) {
+            grabPress = false
         }
     }
 }

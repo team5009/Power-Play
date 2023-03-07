@@ -35,7 +35,7 @@ class TestOpMode : LinearOpMode() {
             telemetry.addData("CupArm Power", instance.bot.arm.power)
             telemetry.addData("Lift Power", instance.bot.ySlider.power)
             telemetry.addData("Arm Power", instance.bot.xSlider.power)
-            telemetry.addData("CupArm Angle", instance.bot.arm.currentPosition * instance.ticksPerDegree)
+            telemetry.addData("CupArm Angle", instance.bot.arm.currentPosition / instance.ticksPerDegree)
             telemetry.addData("GripX Servo Pos", instance.bot.xGrip.position)
             telemetry.addData("GripY Servo Pos", instance.bot.yGrip.position)
             telemetry.addData("GripZ Servo Pos", instance.bot.zGrip.position)

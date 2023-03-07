@@ -25,6 +25,10 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
     var coneDistance: Boolean
     var horizontalSliderMax = 830
 
+    private var changeFound = false
+    private var deltaChange = 0
+    private var previousEncoderTick = 0
+    private var currentEncoderTick = 0
 
 
     init {
@@ -32,12 +36,12 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
         extLiftState = Y_Slider.States.BOTTOM
         cupArmState = Arm.States.DOWN
         armGripState = X_Grip.States.OPEN
-        liftGripState = Y_Grip.States.MIDDLE
+        liftGripState = Y_Grip.States.RECEIVE
         robotState = RobotState.SCORING
         coneDistance = false
     }
 
-    fun runApp() {
+    fun testApp() {
         extArmState = X_Slider.States.READY
         extLiftState = Y_Slider.States.BOTTOM
         cupArmState = Arm.States.DOWN
@@ -85,13 +89,14 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
     }
 
     fun runInit() {
-        extArmState = X_Slider.States.READY
+        extArmState = X_Slider.States.OUT
         extLiftState = Y_Slider.States.BOTTOM
         cupArmState = Arm.States.DOWN
         armGripState = X_Grip.States.OPEN
         liftGripState = Y_Grip.States.RECEIVE
-        robotState = RobotState.RETRACTING
+        robotState = RobotState.DROPPING
         coneDistance = true
+        changeFound = false
 
 //        instance.extArmInit()
 //        Thread.sleep(100)
@@ -99,7 +104,7 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
 //        Thread.sleep(100)
 //        instance.bot.liftInit()
 //        Thread.sleep(100)
-        instance.liftHandInit()
+//        instance.liftHandInit()
     }
 
     fun run() {
@@ -167,6 +172,16 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
                     extArmState = X_Slider.States.RETRACTING
                 }
             }
+            Directions.ADJUST -> {
+                if (extArmState == X_Slider.States.MIDDLE) {
+                    instance.bot.xSlider.power = xSliderConst.power / 1.5
+                    extArmState = X_Slider.States.ADJUSTING
+                }
+                if (extArmState == X_Slider.States.READY) {
+                    instance.bot.xSlider.power = xSliderConst.power / 2
+                    extArmState = X_Slider.States.ADJUSTING
+                }
+            }
             Directions.STOP -> {
                 instance.bot.xSlider.power = 0.0
             }
@@ -226,23 +241,11 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
                 if (liftGripState == Y_Grip.States.RECEIVE) {
                     instance.bot.yGrip.position = yGripConst.dump
                     liftGripState = Y_Grip.States.DUMPING
-                } else if (liftGripState == Y_Grip.States.MIDDLE) {
-                    instance.bot.yGrip.position = yGripConst.dump
-                    liftGripState = Y_Grip.States.DUMPING
                 }
             }
             Directions.RECEIVE -> {
                 if (liftGripState == Y_Grip.States.DUMP) {
                     instance.bot.yGrip.position = yGripConst.receive
-                    liftGripState = Y_Grip.States.RECEIVING
-                } else if (liftGripState == Y_Grip.States.MIDDLE) {
-                    instance.bot.yGrip.position = yGripConst.receive
-                    liftGripState = Y_Grip.States.RECEIVING
-                }
-            }
-            Directions.READY -> {
-                if (liftGripState == Y_Grip.States.RECEIVE || liftGripState == Y_Grip.States.DUMP) {
-                    instance.bot.yGrip.position = yGripConst.middle
                     liftGripState = Y_Grip.States.RECEIVING
                 }
             }
@@ -260,6 +263,13 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
         if (liftGripState == Y_Grip.States.RECEIVING && System.currentTimeMillis() > timings.gripYTime) {
             liftGripState = Y_Grip.States.RECEIVE
         }
+        if (extArmState == X_Slider.States.MIDDLE) {
+            extArm(Directions.ADJUST)
+        }
+        if (extArmState == X_Slider.States.ADJUSTING && abs(instance.bot.xSlider.currentPosition) >= (horizontalSliderMax)) {
+            extArm(Directions.STOP)
+            extArmState = X_Slider.States.OUT
+        }
         if (extArmState == X_Slider.States.OUT) {
             if (cupArmState == Arm.States.DOWN && (armGripState == X_Grip.States.OPEN || armGripState == X_Grip.States.READY)) {
                 timings.gripXTime = System.currentTimeMillis() + xGripConst.time
@@ -271,18 +281,20 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
             if (armGripState == X_Grip.States.CLOSED && cupArmState == Arm.States.DOWN) {
                 cupArm(Directions.UP)
             }
-            if (cupArmState == Arm.States.ASCENDING && abs(instance.bot.arm.currentPosition) > armConst.receive) {
-                cupArm(Directions.STOP)
-                cupArmState = Arm.States.RECEIVE
+            if (cupArmState == Arm.States.ASCENDING && abs(instance.bot.arm.currentPosition) > armConst.down && extArmState == X_Slider.States.OUT) {
+                timings.extTimeOut = System.currentTimeMillis() + xSliderConst.time
+                extArm(Directions.RETRACT)
             }
+        }
+        if (cupArmState == Arm.States.ASCENDING && abs(instance.bot.arm.currentPosition) > armConst.receive) {
+            cupArm(Directions.STOP)
+            cupArmState = Arm.States.RECEIVE
         }
         if (extLiftState == Y_Slider.States.DROPPING && (instance.bot.ySensor.state || instance.bot.ySlider.currentPosition < 10)) {
             lift(Directions.STOP)
             extLiftState = Y_Slider.States.BOTTOM
         }
-        if (extLiftState == Y_Slider.States.BOTTOM && liftGripState == Y_Grip.States.RECEIVE && armGripState == X_Grip.States.CLOSED && cupArmState == Arm.States.RECEIVE) {
-            extArm(Directions.RETRACT)
-            timings.extTimeOut = System.currentTimeMillis() + xSliderConst.time
+        if (extLiftState == Y_Slider.States.BOTTOM && extArmState == X_Slider.States.RETRACTING && liftGripState == Y_Grip.States.RECEIVE && armGripState == X_Grip.States.CLOSED && (cupArmState == Arm.States.RECEIVE || cupArmState == Arm.States.ASCENDING)) {
             robotState = RobotState.RETRACTING
         }
     }
@@ -292,15 +304,24 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
             robotState = RobotState.DONE
             return
         }
+        if (cupArmState == Arm.States.ASCENDING && abs(instance.bot.arm.currentPosition) > armConst.receive) {
+            cupArm(Directions.STOP)
+            cupArmState = Arm.States.RECEIVE
+        }
         if (extArmState == X_Slider.States.RETRACTING) {
             if (!instance.bot.xSensor.state) {
                 extArm(Directions.STOP)
-                horizontalSliderMax += 85
-                Thread.sleep(250)
+                op.sleep(100)
                 extArmState = X_Slider.States.READY
             }
         }
-        if (extArmState == X_Slider.States.READY && liftGripState == Y_Grip.States.RECEIVE) {
+        if ((extArmState == X_Slider.States.READY || extArmState == X_Slider.States.ADJUSTING) && liftGripState == Y_Grip.States.RECEIVE) {
+            if (instance.bot.xSensor.state) {
+                extArm(Directions.ADJUST)
+            }
+            if (!instance.bot.xSensor.state) {
+                extArm(Directions.STOP)
+            }
             if (armGripState == X_Grip.States.CLOSED) {
                 timings.gripXTime = System.currentTimeMillis() + xGripConst.time
                 armGrip(Directions.OPEN)
@@ -328,6 +349,10 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
             robotState = RobotState.DONE
             return
         }
+        if (!instance.bot.xSensor.state) {
+            extArm(Directions.STOP)
+            extArmState = X_Slider.States.READY
+        }
         if (extLiftState == Y_Slider.States.RISING && abs(instance.bot.ySlider.currentPosition) >= ySliderConst.middle) {
             if (liftGripState == Y_Grip.States.RECEIVE) {
                 timings.gripYTime = System.currentTimeMillis() + yGripConst.time
@@ -335,9 +360,9 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
             }
             if (extArmState != X_Slider.States.EXTENDING) {
                 timings.extTimeOut = System.currentTimeMillis() + xSliderConst.time
-                horizontalSliderMax = abs(instance.bot.xSlider.currentPosition) + 200
+                horizontalSliderMax = abs(instance.bot.xSlider.currentPosition) + 400
                 extArm(Directions.EXTEND)
-                armGrip(Directions.READY)
+                armGrip(Directions.OPEN)
             }
             if (extArmState == X_Slider.States.EXTENDING && liftGripState == Y_Grip.States.DUMPING) {
                 robotState = RobotState.SCORING
@@ -363,21 +388,22 @@ class TeleCycle(opMode: LinearOpMode, robot: TeleInstance) {
             lift(Directions.DOWN)
         }
         if (extArmState == X_Slider.States.EXTENDING && cupArmState != Arm.States.ASCENDING) {
-            if (!instance.bot.xSensor.state) {
-                horizontalSliderMax = abs(instance.bot.xSlider.currentPosition) + 200
-                timings.extTimeOut = System.currentTimeMillis() + (xSliderConst.time - 500)
-            }
-            if (abs(instance.bot.xSlider.currentPosition) >= horizontalSliderMax || System.currentTimeMillis() > timings.extTimeOut) {
-                armGrip(Directions.READY)
+//            if (!instance.bot.xSensor.state) {
+//                horizontalSliderMax = abs(instance.bot.xSlider.currentPosition) + deltaChange
+//                timings.extTimeOut = System.currentTimeMillis() + (xSliderConst.time - 500)
+//            }
+            if (abs(instance.bot.xSlider.currentPosition) >= (horizontalSliderMax - 200) || System.currentTimeMillis() > timings.extTimeOut / 2) {
+                armGrip(Directions.OPEN)
                 extArm(Directions.STOP)
-                extArmState = X_Slider.States.OUT
+                extArmState = X_Slider.States.MIDDLE
+                armGripState = X_Grip.States.OPEN
             }
         }
         if (extLiftState == Y_Slider.States.DROPPING && (instance.bot.ySensor.state || instance.bot.ySlider.currentPosition < 10)) {
             lift(Directions.STOP)
             extLiftState = Y_Slider.States.BOTTOM
         }
-        if (extArmState == X_Slider.States.OUT && (extLiftState == Y_Slider.States.DROPPING || extLiftState == Y_Slider.States.BOTTOM)) {
+        if (extArmState == X_Slider.States.MIDDLE && (extLiftState == Y_Slider.States.DROPPING || extLiftState == Y_Slider.States.BOTTOM)) {
             robotState = RobotState.DROPPING
         }
     }

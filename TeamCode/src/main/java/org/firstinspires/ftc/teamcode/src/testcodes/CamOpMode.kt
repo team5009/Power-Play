@@ -25,7 +25,7 @@ class CamOpMode : LinearOpMode() {
         telemetry.addData("Status", "Ready")
         telemetry.update()
         bot.initJob()
-        bot.startJob(vuforia)
+        bot.startJob(vuforia, AutoInstance.CameraPositions.RIGHT)
         waitForStart()
 
         if (opModeIsActive()) {

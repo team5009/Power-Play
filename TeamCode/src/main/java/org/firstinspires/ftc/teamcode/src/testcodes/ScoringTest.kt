@@ -11,10 +11,10 @@ import org.firstinspires.ftc.teamcode.src.models.abot.utils.Directions
 @Autonomous(name = "Scoring Test", group = "Auto Test")
 class ScoringTest : LinearOpMode() {
     override fun runOpMode() {
-//        val bot = TeleInstance(this)
-        val bot = AutoInstance(this, telemetry)
-        val scoringCycle = AutoCycle(this, bot)
-//        val scoringCycle = TeleCycle(this, bot)
+        val bot = TeleInstance(this)
+//        val bot = AutoInstance(this, telemetry)
+//        val scoringCycle = AutoCycle(this, bot)
+        val scoringCycle = TeleCycle(this, bot)
         val target = 2
 
         telemetry.addData("Lift pos", bot.bot.ySlider.currentPosition)

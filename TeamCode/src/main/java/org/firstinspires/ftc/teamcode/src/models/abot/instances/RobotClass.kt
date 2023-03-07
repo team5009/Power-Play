@@ -4,11 +4,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.*
-
-import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import org.firstinspires.ftc.teamcode.src.models.abot.utils.TouchSensor
 
 val touchSensor = TouchSensor()
@@ -30,10 +27,10 @@ class RobotClass(Instance: LinearOpMode) {
 
     init {
         // Set Each Wheel Direction
-        fl.direction = DcMotorSimple.Direction.REVERSE
-        fr.direction = DcMotorSimple.Direction.FORWARD
-        bl.direction = DcMotorSimple.Direction.REVERSE
-        br.direction = DcMotorSimple.Direction.FORWARD
+        fl.direction = DcMotorSimple.Direction.FORWARD
+        fr.direction = DcMotorSimple.Direction.REVERSE
+        bl.direction = DcMotorSimple.Direction.FORWARD
+        br.direction = DcMotorSimple.Direction.REVERSE
 
         fl.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         fl.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -45,6 +42,7 @@ class RobotClass(Instance: LinearOpMode) {
         br.mode = DcMotor.RunMode.RUN_USING_ENCODER
 
         ySlider.direction = DcMotorSimple.Direction.REVERSE
+        arm.direction = DcMotorSimple.Direction.REVERSE
 
         ySlider.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         ySlider.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -68,5 +66,12 @@ class RobotClass(Instance: LinearOpMode) {
         params.loggingTag = "IMU"
         params.accelerationIntegrationAlgorithm = JustLoggingAccelerationIntegrator()
         imu.initialize(params)
+    }
+
+    fun move(flPower: Double, frPower: Double, blPower: Double, brPower: Double) {
+        fl.power = flPower
+        fr.power = frPower
+        bl.power = blPower
+        br.power = brPower
     }
 }

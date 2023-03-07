@@ -28,10 +28,10 @@ class EncoderTest: LinearOpMode() {
         instance.bot.br.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         instance.bot.br.mode = DcMotor.RunMode.RUN_USING_ENCODER
 
-        instance.bot.fl.setPIDFCoefficients(instance.bot.fl.mode, pidfCoefficients)
-        instance.bot.fr.setPIDFCoefficients(instance.bot.fr.mode, pidfCoefficients)
-        instance.bot.bl.setPIDFCoefficients(instance.bot.bl.mode, pidfCoefficients)
-        instance.bot.br.setPIDFCoefficients(instance.bot.br.mode, pidfCoefficients)
+//        instance.bot.fl.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfCoefficients)
+//        instance.bot.fr.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfCoefficients)
+//        instance.bot.bl.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfCoefficients)
+//        instance.bot.br.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfCoefficients)
         telemetry.addData("Info", "Ready")
         telemetry.update()
 
@@ -46,8 +46,8 @@ class EncoderTest: LinearOpMode() {
 
         waitForStart()
         if (opModeIsActive()) {
-            instance.runToPosition(-60.0, 90.0)
-            instance.turnToPID(-72.0, 90.0)
+//            instance.runToPosition(100.0, 75.0, 0.0)
+            instance.turnToAngle(180.0, 0.9)
         }
 
     }
